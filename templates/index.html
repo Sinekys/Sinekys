@@ -4,18 +4,103 @@
 {% block title %}Sinekys - Tu aprendizaje tiende a infinito!{% endblock %}
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
     <style>
         body {
             background: #0d0d0d;
             color: #fff;
         }
+
+        /* ---------- HERO ---------- */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 85vh;
+            background-image: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1400&q=80');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            color: #fff;
+        }
+        .hero::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 900px;
+        }
+        .hero-content h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #FFA500;
+            margin-bottom: 20px;
+        }
+        .hero-content p {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            font-weight: 400;
+            margin-bottom: 30px;
+        }
+        .hero-cta {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-primary, .btn-secondary {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease-in-out;
+        }
+        .btn-primary {
+            background-color: #FFA500;
+            color: #000;
+        }
+        .btn-primary:hover {
+            background-color: #ff8c00;
+            color: #fff;
+        }
+        .btn-secondary {
+            border: 2px solid #fff;
+            color: #fff;
+            background: transparent;
+        }
+        .btn-secondary:hover {
+            background-color: #fff;
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.2rem;
+            }
+            .hero-content p {
+                font-size: 1rem;
+            }
+        }
+
+        /* ---------- LANDING ---------- 
         .landing-container {
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
             min-height: 80vh;
-            padding: 40px 0 40px 0;
+            padding: 40px 0;
         }
         .landing-text {
             max-width: 50%;
@@ -49,10 +134,7 @@
             border-radius: 20px;
             box-shadow: 0 4px 32px rgba(0,0,0,0.7);
         }
-        {% comment %} *{
-                box-sizing: border-box;
-                border: 1px solid red;
-            } {% endcomment %}
+
         @media (max-width: 900px) {
             .landing-container {
                 flex-direction: column;
@@ -67,15 +149,281 @@
                 justify-content: center;
                 width: 100%;
             }
-            {% comment %} *{
-                box-sizing: border-box;
-                border: 1px solid red;
-            } {% endcomment %}
+        }*/
+        /* ---------- BENEFITS ---------- */
+        /* ---------- BENEFITS ---------- */
+        .benefits {
+            background-color: #0d0d0d !important; /* negro oscuro forzado */
+            color: #fff !important;
+            padding: 80px 20px;
+            text-align: center;
         }
+        
+        .benefits .container {
+            background: transparent !important; /* elimina fondo rosado del contenedor */
+            color: inherit; /* hereda blanco del padre */
+        }
+        
+        .benefits h2,
+        .benefits h3,
+        .benefits p {
+            color: #fff; /* asegura que todos los textos sean blancos */
+        }
+        .benefits .section-subtitle {
+            color: #ccc; /* gris claro para subtítulo */
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        .section-title span {
+            color: #FFA500;
+        }
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #ccc;
+            margin-bottom: 50px;
+        }
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .benefit-card {
+            background: #111;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .benefit-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0px 10px 25px rgba(255, 165, 0, 0.3);
+        }
+        .benefit-card i {
+            font-size: 2.5rem;
+            color: #FFA500;
+            margin-bottom: 20px;
+        }
+        .benefit-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .benefit-card p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #ddd;
+        }
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 2rem;
+            }
+            .section-subtitle {
+                font-size: 1rem;
+            }
+        }
+        /* ---------- HOW IT WORKS ---------- */
+      .how-it-works {
+        background: #ffffff !important; /* fondo oscuro */
+        color: #000;
+        padding: 80px 20px;
+        text-align: center;
+      }
+
+      .how-it-works .container {
+  background: #ffffff !important; /* fuerza blanco */
+}
+
+      .how-it-works .section-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+      }
+
+      .how-it-works .section-title span {
+        color: #FFA500; /* naranja */
+      }
+
+      .how-it-works .section-subtitle {
+        font-size: 1.1rem;
+        color: #000;
+        margin-bottom: 60px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .how-it-works .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .how-it-works .step-card {
+        background: #111;
+        color: #fff;
+        border-radius: 16px;
+        padding: 40px 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .how-it-works .step-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0px 10px 25px rgba(255, 165, 0, 0.3);
+      }
+
+      .how-it-works .step-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #FFA500;
+        color: #000;
+        border-radius: 50%;
+        font-size: 2rem;
+        font-weight: 700;
+      }
+
+      .how-it-works .step-card h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: #FFA500;
+      }
+
+      .how-it-works .step-card p {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #ddd;
+      }
+
+      @media (max-width: 768px) {
+        .how-it-works .section-title {
+          font-size: 2rem;
+        }
+        .how-it-works .section-subtitle {
+          font-size: 1rem;
+        }
+      }
+      /* ------------ CTA FORM ------------ */
+    .cta-form {
+      background: linear-gradient(135deg, #000 60%, #FFA500 100%);
+      color: #fff;
+      padding: 80px 20px;
+      text-align: center;
+    }
+
+    .cta-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .cta-container h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 15px;
+    }
+
+    .cta-container h2 span {
+      color: #FFA500;
+    }
+
+    .cta-container p {
+      font-size: 1.1rem;
+      margin-bottom: 40px;
+      color: #f0f0f0;
+    }
+
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+      background: #fff;
+      color: #000;
+    }
+
+    .form-group select {
+      cursor: pointer;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: 2px solid #FFA500;
+      box-shadow: 0px 0px 10px rgba(255, 165, 0, 0.4);
+    }
+
+    .btn-submit {
+      background: #FFA500;
+      color: #000;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+      background: #ff8c00;
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0px 5px 20px rgba(255, 165, 0, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .cta-container h2 {
+        font-size: 2rem;
+      }
+      .cta-container p {
+        font-size: 1rem;
+      }
+    }
     </style>
 {% endblock %}
 
 {% block content %}
+
+    <!-- HERO SECTION -->
+    <section class="hero" aria-label="Sinekys - Plataforma Educativa para Universidades">
+      <div class="hero-content">
+        <h1>Sinekys - Tu aprendizaje tiende a infinito!</h1><h2>Soluciones Educativas para Universidades y Estudiantes</h2>
+        <p>
+          Potencia el <strong>rendimiento académico</strong> con una plataforma que ofrece
+          <em>rutas de estudio personalizadas</em>, materiales complementarios y apoyo continuo.
+          Diseñada para <strong>universidades</strong>, <strong>institutos superiores</strong> y <strong>estudiantes</strong>
+          que buscan mejorar su aprendizaje sin depender de clases extra o disponibilidad de tutores.
+        </p>
+        <div class="hero-cta">
+          <a href="{% url 'account_signup' %}" class="btn-primary"> Únete </a>
+            <a href="{% url 'account_login' %}" class="btn-secondary"> Iniciar Sesión </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- LANDING SECTION 
     <div class="landing-container" style="justify-content: center; gap:10vh;">
         <div class="landing-text">
             <h1 class="landing-title">Sinekys</h1>
@@ -90,5 +438,134 @@
         <div class="landing-image">
             <img src="{% static 'images/NewSinekysPng.png' %}" alt="Sinekys Logo"/>
         </div>
+    </div>-->
+<!-- BENEFITS SECTION -->
+    <section class="benefits" aria-label="Beneficios de Sinekys para estudiantes e instituciones">
+      <div class="container">
+        <h2 class="section-title">Beneficios de usar <span>Sinekys</span></h2>
+        <p class="section-subtitle">
+          Una plataforma educativa diseñada para mejorar la experiencia de aprendizaje y optimizar la gestión académica.
+        </p>
+
+        <div class="benefits-grid">
+          <!-- Estudiantes -->
+          <div class="benefit-card">
+            <i class="fas fa-user-graduate"></i>
+            <h3>Para Estudiantes</h3>
+            <p>
+              Accede a <strong>rutas de estudio personalizadas</strong>, materiales complementarios y apoyo académico en cualquier momento, mejorando tu rendimiento sin depender de tutorías extra.
+            </p>
+          </div>
+
+          <!-- Universidades -->
+          <div class="benefit-card">
+            <i class="fas fa-university"></i>
+            <h3>Para Universidades</h3>
+            <p>
+              Ofrece a tus alumnos una <strong>herramienta innovadora</strong> que se integra con la malla curricular, optimiza la enseñanza y eleva los indicadores de éxito académico.
+            </p>
+          </div>
+
+          <!-- Flexibilidad -->
+          <div class="benefit-card">
+            <i class="fas fa-laptop-code"></i>
+            <h3>Acceso Flexible</h3>
+            <p>
+              Disponible en cualquier dispositivo con una interfaz intuitiva y segura para garantizar la mejor <strong>experiencia digital</strong>.
+            </p>
+          </div>
+
+          <!-- Rendimiento -->
+          <div class="benefit-card">
+            <i class="fas fa-chart-line"></i>
+            <h3>Mejora del Rendimiento</h3>
+            <p>
+              Potencia el <strong>aprendizaje autónomo</strong> y brinda métricas en tiempo real para identificar fortalezas y oportunidades de mejora en los estudiantes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- HOW IT WORKS SECTION -->
+    <section class="how-it-works" aria-label="Cómo funciona Sinekys">
+      <div class="container">
+        <h2 class="section-title">¿Cómo funciona <span>Sinekys</span>?</h2>
+        <p class="section-subtitle">
+          Aprende paso a paso con nuestro sistema de <strong>tokens diarios</strong>, IA educativa y temarios adaptados a tu carrera. 
+        </p>
+
+        <div class="steps-grid">
+          <!-- Paso 1 -->
+          <div class="step-card">
+            <div class="step-icon"><i class="fas fa-user-plus"></i></div>
+            <h3>1. Regístrate</h3>
+            <p>
+              Crea tu cuenta y recibe <strong>tokens diarios gratuitos</strong> para acceder al contenido académico.
+            </p>
+          </div>
+
+          <!-- Paso 2 -->
+          <div class="step-card">
+            <div class="step-icon"><i class="fas fa-book-open"></i></div>
+            <h3>2. Elige tu materia y tema</h3>
+            <p>
+              Selecciona el ramo, revisa el <strong>temario disponible</strong> y accede a una introducción clara y directa al tema.
+            </p>
+          </div>
+
+          <!-- Paso 3 -->
+          <div class="step-card">
+            <div class="step-icon"><i class="fas fa-tasks"></i></div>
+            <h3>3. Resuelve ejercicios</h3>
+            <p>
+              Pon en práctica tu conocimiento con <strong>ejercicios interactivos</strong>.  
+              Si te equivocas, nuestra IA te da <strong>retroalimentación personalizada</strong>.
+            </p>
+          </div>
+
+          <!-- Paso 4 -->
+          <div class="step-card">
+            <div class="step-icon"><i class="fas fa-crown"></i></div>
+            <h3>4. Avanza y mejora</h3>
+            <p>
+              Cada ejercicio correcto desbloquea el siguiente.  
+              Al llegar al límite de tokens diarios, puedes esperar al día siguiente o pasar a <strong>Premium</strong> para continuar sin límites.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- CTA FORM -->
+  <section class="cta-form" aria-label="Solicita más información de Sinekys">
+    <div class="cta-container">
+      <h2>🚀 Da el siguiente paso con <span>Sinekys</span></h2>
+      <p>
+        Completa el formulario y nuestro equipo se pondrá en contacto contigo para mostrarte cómo mejorar el rendimiento académico en tu institución.
+      </p>
+
+      <form class="contact-form">
+        <div class="form-group">
+          <input type="text" name="nombre" placeholder="Tu nombre completo" required>
+        </div>
+
+        <div class="form-group">
+          <input type="email" name="email" placeholder="Tu correo institucional" required>
+        </div>
+
+        <div class="form-group">
+          <select name="tipo_usuario" required>
+            <option value="estudiante">Estudiante</option>
+            <option value="universidad">Universidad / Instituto</option>
+            <option value="profesor">Profesor</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <textarea name="mensaje" rows="4" placeholder="Cuéntanos qué necesitas..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Solicitar información</button>
+      </form>
     </div>
+  </section>
 {% endblock %}
