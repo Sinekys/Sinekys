@@ -42,13 +42,16 @@ def safe_create_response(payload, carrera, max_retries=2):
             time.sleep(1 + attempt*0.5)
 
 # uso
-payload = {
- "CARRERA":"INFORMÁTICA",
- "MATERIA":"funciones",
- "EJERCICIO":"f(x) = x^2 + 6x + 8 = 0",
- "NIVEL":"intermedio",
- "USO_EN_SISTEMA":"Sinekys: modo adaptivo, pequeño grupo experimental",
- "PERSONALIZACION": {"estudiante":"grupo_A", "preferencias":["aplicaciones_practicas","breve"]}
-}
-resultado = safe_create_response(payload)
-print(resultado["display_text"])
+# request.py
+def contextualize_exercise(ejercicio, carrera):
+    payload = {
+        "CARRERA": carrera,
+        "EJERCICIO": ejercicio.enunciado,
+        "NIVEL": "intermedio",  # you might want to compute this later
+        "USO_EN_SISTEMA": "Sinekys: modo adaptivo",
+        "PERSONALIZACION": {"estudiante": "test_user"}
+    }
+    return safe_create_response(payload, carrera)
+
+
+# print(resultado["display_text"])

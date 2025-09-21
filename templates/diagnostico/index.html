@@ -204,10 +204,10 @@
   
   <div class="main-container">
 
-    <div class="exercise">
-      {% comment %} <p>Imagina que en el futuro, cuando trabajes en una oficina o en cualquier empresa, tendrás que crear mapas y gráficos para organizar información importante, como presupuestos, horarios, inventarios o datos de clientes. Saber cómo hacerlo de manera clara y efectiva te ayudará a que todos puedan entender fácilmente la información y tomar mejores decisiones. Lo que estás aprendiendo ahora en clase te será muy útil para presentar datos de forma ordenada y profesional en tu trabajo, facilitando la comunicación y el trabajo en equipo.</p> {% endcomment %}
-      <p>Factoriza: 4x² + 8x + 4</p>
-    </div>
+<div class="exercise">
+  <p>{{ contexto.display_text }}</p>
+</div>
+
 
     <div class="panels">
       <div class="left-panel">        
@@ -227,12 +227,7 @@
         <div class="hint-box">
           <button class="hint-button" type="button">¿Pista?</button>
           <div class="hint-text">
-            {% comment %} <p>ax² + bx + c = 0</p>
-            <p>(x + p)(x + q) = 0</p>
-            <ul>
-              <li>p + q = b</li>
-              <li>p · q = c</li>
-            </ul> {% endcomment %}
+            <p>{{ contexto.hint }}</p>
           </div>
         </div>
       </div>
