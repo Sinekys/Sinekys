@@ -6,11 +6,13 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 MODEL = os.getenv("MODEL", "gpt-4o-mini") 
 
+
+# Función para ejercicio estándar y grupos
 def build_prompt(payload, carrera):
     system = (
         f'Eres un profesor universitario de {carrera}. Responde en español. '
         "Cuando te pidan contextualizar un enunciado, genera un JSON válido con "
-        "display_text, exercise, learning_objective, difficulty, tags, hint (opcional) y metadata." #Revisar si estos atributos de respuestas son realmente necesario y/o se ajustan a la DB
+        "display_text, exercise, learning_objective, tags, hint (opcional)." #Revisar si estos atributos de respuestas son realmente necesario y/o se ajustan a la DB
     )
     user = json.dumps(payload, ensure_ascii=False)
     return system, user
@@ -54,4 +56,3 @@ def contextualize_exercise(ejercicio, carrera):
     return safe_create_response(payload, carrera)
 
 
-# print(resultado["display_text"])

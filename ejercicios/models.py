@@ -61,13 +61,22 @@ class Ejercicio(AbstractBaseModel):
     tipo_ejercicio = models.ManyToManyField(TipoEjercicio, verbose_name=_("tipo de ejercicio")) 
     
     # Campos
-    enunciado = models.CharField(max_length=30,verbose_name=_("enunciado"))
+    enunciado = models.CharField(max_length=50,verbose_name=_("enunciado"))
     solucion = models.CharField(max_length=50,verbose_name=_("solucion"))
     dificultad = models.FloatField(db_index=True,
         verbose_name=_("dificultad"),
         validators=[
-            validators.MinValueValidator(0.0),
-            validators.MaxValueValidator(1.0)
+            validators.MinValueValidator(-3.0),
+            validators.MaxValueValidator(3.0)
+        ]
+    )
+    discriminacion = models.FloatField(
+        verbose_name=_("discriminación"),
+        default=1.0,
+        help_text=_("Parámetro a de IRT: mide la pendiente del ítem"),
+        validators=[
+            validators.MinValueValidator(0.01),   # nunca cero ni negativo
+            validators.MaxValueValidator(2.0)     # Será 2 // Al menos eso está en documentaciones que he visto
         ]
     )
     fuente = models.CharField(
@@ -98,6 +107,11 @@ class Ejercicio(AbstractBaseModel):
     )
     def __str__(self):
         return self.enunciado
+    
+class EjercicioVecesMostrado(models.Model):
+    ejercicio = models.ForeignKey(Ejercicio, on_delete=models.CASCADE)
+    veces_mostrado=models.PositiveBigIntegerField()
+    veces_acertado=models.PositiveBigIntegerField()
     
 class PasoEjercicio(models.Model):
 

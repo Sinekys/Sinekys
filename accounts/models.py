@@ -94,8 +94,8 @@ class Estudiante(AbstractBaseModel):
 
 class Diagnostico(models.Model):
     estudiante = models.OneToOneField('Estudiante', on_delete=models.CASCADE, verbose_name='Estudiante')
-    theta = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(1)])
-    puntaje_irt = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(1)])
+    theta = models.FloatField(validators=[MinValueValidator(-3), MaxValueValidator(3)])
+    # puntaje_irt = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(1)])
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
