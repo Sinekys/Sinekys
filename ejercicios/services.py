@@ -12,9 +12,8 @@ def actualizar_diagnostico(estudiante):
     # Obejtivo: Estimar theta usando 2PL e intentos del estudiante
     # Actualizar y/o crear el objeto Diagnostico  
     intentos = Intento.objects.filter(estudiante=estudiante).select_related('ejercicio')
-    
     if not intentos:
-        return None
+        return 0.0, 1.0 
     
     datos = []
     for intento in intentos:
@@ -84,10 +83,13 @@ def seleccionar_siguiente_ejercicio(estudiante):
     # Objetivo: seleccionar el ítem con máxima informacion
     # Método Fisher?
     # theta
+    theta = 0.0 #Se supone que el usuario no ha hecho ningún ejercicio antes, por lo que su nivel debería ser 0
+        
     try:
-        theta = estudiante.diagnostico.theta
-    except:
-        theta = 0.0
+        if hasattr(estudiante, 'diagnostico') and estudiante.diagnostico:
+            theta = estudiante.diagnostico.theta
+    except Diagnostico.DoesNotExist:
+        pass
         
     # evitar que se repitan items
     intentos_previos = Intento.objects.filter(estudiante=estudiante)

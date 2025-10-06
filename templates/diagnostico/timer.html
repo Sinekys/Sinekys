@@ -1,0 +1,16 @@
+{% lodad static%}
+
+{% block scripts %}
+
+    <script src={% static '/js/diagnostico/timer.js'%} deref> </script>
+
+{% endblock scripts%}
+
+
+{% block content%}
+        <div class="time" id="time">Tiempo restante:</div>
+
+
+        <div class="spinner-border" role="status"></div>
+{% endblock content%}
+

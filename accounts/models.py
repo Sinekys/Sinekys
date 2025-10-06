@@ -4,6 +4,8 @@ from django.utils.translation import gettext_lazy as _
 from django.core import validators
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
+# from datetime import timezone
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -95,8 +97,33 @@ class Estudiante(AbstractBaseModel):
 class Diagnostico(models.Model):
     estudiante = models.OneToOneField('Estudiante', on_delete=models.CASCADE, verbose_name='Estudiante')
     theta = models.FloatField(validators=[MinValueValidator(-3), MaxValueValidator(3)])
-    # puntaje_irt = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(1)])
+    error_estimacion = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0.0), MaxValueValidator(2.0)],
+        verbose_name="Error estándar de estimación",
+        help_text="Precisión de la estimación de theta (SE). Valores bajos = alta precisión."
+    )
     fecha = models.DateTimeField(auto_now_add=True)
+    # === Nuevos campos para gestionar el flujo ===
+    fecha_inicio = models.DateTimeField(null=True, blank=True)
+    duracion_segundos = models.PositiveIntegerField(default=3540)  # 59 minutos
+    finalizado = models.BooleanField(default=False)
+    
+    def tiempo_restante(self):
+        if not self.fecha_inicio:
+            return self.duracion_segundos
+        transcurrido = (timezone.now() - self.fecha_inicio).total_seconds()
+        return max(0, self.duracion_segundos - transcurrido)
+
+    def is_expired(self):
+        return self.tiempo_restante() <= 0
+
+    def save(self, *args, **kwargs):
+    # Solo establecer fecha_inicio si es la PRIMERA VEZ y no está finalizado
+        if not self.pk and not self.fecha_inicio:
+            self.fecha_inicio = timezone.now()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'Diagnóstico de {self.estudiante.user.get_full_name()}'

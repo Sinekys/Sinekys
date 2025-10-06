@@ -1,5 +1,5 @@
 {% load static %}
-<script src="{% static 'js/diagnostico.js' %}"></script>
+
 {% block title %}SINEKYS – Factorización{% endblock %}
 
 {% block content %}
@@ -24,12 +24,16 @@
   </header>
 
 <main>
-    <div class="time" id="time"></div>
+  <div id="diagnostico-root"
+       data-duration="3540"           
+       data-diagnostico-id="{{ diagnostico.id }}">
+    <div class="time">Tiempo: --:--</div>
   
   <div class="main-container">
 
 <div class="exercise">
   <p id="enunciado">{{ contexto.display_text }}</p>
+  
 </div>
 
     <input type="hidden" id="ejercicio-id" value="{{ ejercicio.id}}">
@@ -67,5 +71,5 @@
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/diagnostico.css' %}">
-    <script src="{% static 'diagnostico/diagnostico.js' %}"></script>
+    <script type="module" src="{% static 'js/diagnostico/main.js' %}"></script>
 {% endblock %}

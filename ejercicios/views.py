@@ -8,12 +8,14 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.utils.decorators import method_decorator
 from django.db import transaction
 from django.utils import timezone
+# from django.urls import reverse
 import json
 import re
 import numpy
+
 # Models
 from ejercicios.models import Ejercicio, Intento, IntentoPaso, EjercicioVecesMostrado
-from accounts.models import Estudiante
+from accounts.models import Estudiante, Diagnostico
 
 # API ChatGPT
 # from request import contextualize_exercise
@@ -29,6 +31,7 @@ from ejercicios.services import actualizar_diagnostico, seleccionar_siguiente_ej
 def normalizar_respuesta(respuesta: str) -> str:
     if respuesta is None:
         return ""
+    r = respuesta.strip().lower() 
     
     # Eliminar espacios alrededor de operadores
     r = re.sub(r'\s*\+\s*', '+', r)
@@ -49,16 +52,11 @@ def normalizar_respuesta(respuesta: str) -> str:
     # 17,5 esta puede ser la respuestas de algebra o de funciones siendo 17,5 un punto en una gráfica
     
     return r
-    
 
     
 def evaluar_respuesta(respuesta_estudiante: str, respuesta_correcta: str) -> tuple[bool, float]:
     es_correcto = normalizar_respuesta(respuesta_estudiante) == normalizar_respuesta(respuesta_correcta)
-    # Vale, necesito una fórmula para ver cuantos puntos se le da al alumno
-    # Base:
-    # Si el resultado es correcto se le da: 0.X cantidad de puntos
-    # Si el resultado es correcto pero el desarrollo está mal se le da 0.Y donde 0.Y < 0.X
-    # Si el resultado es incorrecto no se le da puntos 0.0 
+
     puntos = 1.0 if es_correcto else 0.0
     return (es_correcto, puntos)
 
@@ -71,22 +69,20 @@ class DiagnosticTestView(View):
         else:
             return self._get_html_response(request)
         
-    def _get_html_response(self,request):
+    def _get_html_response(self, request):
         try:
             estudiante = request.user.estudiante
             ejercicio = seleccionar_siguiente_ejercicio(estudiante)
         except Estudiante.DoesNotExist:
-            return HttpResponseBadRequest('Usuario no encontrado x_x')
+            return HttpResponseBadRequest('Usuario no encontrado')
         
         if not ejercicio:
-            return JsonResponse({"error":"Por algún motivo no hay ejercicio disponibles"},status=400)
-            
-        # LLM contextualización
-        contexto = contextualize_exercise_diagnostico(ejercicio) #ojo es diferente a contextualize_excercise
+            return JsonResponse({"error": "No hay ejercicios disponibles"}, status=400)
         
+        contexto = contextualize_exercise_diagnostico(ejercicio)
         context = {
-            "ejercicio": ejercicio, #user {{ ejercicio.id}} en el template
-            "contexto": contexto, #respuesta 
+            "ejercicio": ejercicio,
+            "contexto": contexto,
         }
         return render(request, "diagnostico/index.html", context)
     
@@ -114,6 +110,9 @@ class DiagnosticTestView(View):
             "contexto":contexto
             })
     
+    # def get_absolute_url(self):
+    #     return reverse('events:event-detail', kwargs={'pk':self.pk})
+    
     
 
     
@@ -128,12 +127,32 @@ class DiagnosticTestView(View):
             payload = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({"error":"Json inválido"}, 400)
-        
+        # get estudiante
         try:
             estudiante = request.user.estudiante
         except Estudiante.DoesNotExist:
             return JsonResponse({"error":"Estudiante no encontrado"}, 400)
         
+        diagnostico, created = Diagnostico.objects.get_or_create(
+            estudiante=estudiante,
+            defaults={
+                'theta':0.0,
+                'error_estimacion':1.0,
+                'finalizado':False
+            }
+        )
+        
+        # Verificar si el exámen ya finalizó o expiró
+        
+        if diagnostico.finalizado or diagnostico.is_expired(): 
+            return JsonResponse({
+            "success": True,
+            "final": True,
+            "motivo": "Diagnostico ya finalizado o tiempo agotado",
+            "mensaje":"Respuesta registrada correctamente"
+        })
+        
+        # payload para los ejercicios
         ejercicio_id = payload.get("ejercicio_id")
         respuesta_estudiante = payload.get("respuesta_estudiante", "").strip()
         tiempo_en_segundos = float(payload.get("tiempo_en_segundos",0))
@@ -159,8 +178,7 @@ class DiagnosticTestView(View):
             fecha_intento=timezone.now()
         )
         
-        EjercicioVecesMostrado
-        
+        # guardar pasos
         for orden, paso_texto in enumerate(pasos, start=1):
             IntentoPaso.objects.create(
                 intento=intento,
@@ -169,16 +187,77 @@ class DiagnosticTestView(View):
                 datos_aux={} #futuro variables intermedias?
             )
             
-        theta_actual = actualizar_diagnostico(estudiante)
+        # actualizar dianostico y obtener theta + SE
+        theta_actual, se = actualizar_diagnostico(estudiante)
         
+        # actualizar el objeto Diagnostico con los nuevos valores
+        diagnostico.theta = theta_actual
+        diagnostico.error_estimacion = se #esto debería venir desde services.py
+        diagnostico.save()
+        
+        # criterios de finalizacion
+        # criterios de finalizacion
+        # criterios de finalizacion
+        num_items = Intento.objects.filter(estudiante=estudiante).count() #Ojo puede haber un problema, ya que si el es estudiante cancela la prueba, los intentos seguiran registrados y por lo tanto el número aumentaría
+        max_items = 30
+        umbral_se = 0.4
+        
+        finalizado = False
+        motivo = ""
+        if se < umbral_se:
+            finalizado = True
+            motivo = "Precisión alcanzada"
+        elif num_items >= max_items:
+            finalizado = True
+            motivo = "Límite de ejercicios alcanzado"
+        elif diagnostico.is_expired():
+            finalizado = True
+            motivo = "Tiempo agotado"
+
+        if finalizado:
+            diagnostico.finalizado = True
+            diagnostico.save()
+            return JsonResponse({
+                "success": True,
+                "final": True,
+                "motivo": motivo,
+                "theta": theta_actual,
+                "error": se
+            })
+            
+              # Si no finaliza, devolver siguiente ejercicio
+        siguiente_ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+        if not siguiente_ejercicio:
+            # Caso extremo: no hay más ejercicios
+            diagnostico.finalizado = True
+            diagnostico.save()
+            return JsonResponse({
+                "success": True,
+                "final": True,
+                "motivo": "No hay más ejercicios disponibles",
+                "theta": theta_actual,
+                "error": se
+            })
+
+        contexto = {
+            "display_text": siguiente_ejercicio.enunciado,
+            "hint": "Pista aquí"
+        }
+
         return JsonResponse({
             "success": True,
-            "intento_id": intento.id,
-            "es_correcto": es_correcto,
-            "puntos": puntos,
+            "final": False,
             "theta": theta_actual,
-            "mensaje":"Respuesta registrada correctamente"
+            "error": se,
+            "num_items": num_items,
+            "ejercicio": {
+                "id": siguiente_ejercicio.id,
+                "enunciado": siguiente_ejercicio.enunciado,
+                "dificultad": float(siguiente_ejercicio.dificultad)
+            },
+            "contexto": contexto
         })
         
+        
         # Cómo determino el umbral del error estándar?
-        # No lo puedo suponer, no lo voy a hacer
+        # No lo puedo suponer
