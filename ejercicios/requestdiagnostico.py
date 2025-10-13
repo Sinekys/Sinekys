@@ -48,10 +48,20 @@ def contextualize_exercise_diagnostico(ejercicio):
     """
     Versión neutra: genera un contexto simple para pruebas diagnósticas.
     """
-    payload = {
+    try:
+        payload = {
         "EJERCICIO": ejercicio.enunciado,
         "TIPO": "diagnostico",
         "NIVEL": "basico",
         "USO_EN_SISTEMA": "Prueba diagnóstica inicial",
-    }
-    return safe_create_response_diagnostico(payload)
+        }
+        return safe_create_response_diagnostico(payload)
+    except Exception:
+        # fallback seguro
+        return {
+            "display_text": ejercicio.enunciado,
+            "hint":"Piensa el ejercicio en partes lo más pequeñas posibles",
+            "exercise": ejercicio.enunciado,
+            "learning_objective": "Evaluar conocimientos básicos",
+            "tags": ["diagnostico"]
+        }

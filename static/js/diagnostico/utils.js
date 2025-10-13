@@ -1,4 +1,3 @@
-// static/js/diagnostico/utils.js
 export function pad2(n){ return n.toString().padStart(2,'0'); }
 
 export function formatSeconds(sec){
@@ -8,6 +7,6 @@ export function formatSeconds(sec){
   return `${pad2(minutes)}:${pad2(seconds)}`;
 }
 
-export function parseISO(iso){
+export function parseISO(iso){ 
   return new Date(iso);
 }

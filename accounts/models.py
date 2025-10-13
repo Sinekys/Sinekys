@@ -120,8 +120,8 @@ class Diagnostico(models.Model):
         return self.tiempo_restante() <= 0
 
     def save(self, *args, **kwargs):
-    # Solo establecer fecha_inicio si es la PRIMERA VEZ y no está finalizado
-        if not self.pk and not self.fecha_inicio:
+    # Establecer fecha_inicio la primera vez que se guarda con finalizado=False y sin fecha_inicio
+        if self.fecha_inicio is None and not self.finalizado:
             self.fecha_inicio = timezone.now()
         super().save(*args, **kwargs)
 

@@ -72,9 +72,25 @@ class DiagnosticTestView(View):
     def _get_html_response(self, request):
         try:
             estudiante = request.user.estudiante
+            with transaction.atomic():
+                diagnostico, created = Diagnostico.objects.get_or_create(
+                    estudiante = estudiante,
+                    defaults={
+                        'theta':0.0,
+                        'error_estimacion': 1.0,
+                        'finalizado':False,
+                        'fecha_inicio': timezone.now()
+                    }
+                )
+                        
+                if  not created and diagnostico.fecha_inicio is None and not diagnostico.finalizado:
+                    diagnostico.fecha_inicio = timezone.now()
+                    diagnostico.save(update_fields=['fecha_inicio'])
             ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+            print(f"Diagnóstico ID: {diagnostico.id}, fecha_inicio: {diagnostico.fecha_inicio}")
         except Estudiante.DoesNotExist:
             return HttpResponseBadRequest('Usuario no encontrado')
+        
         
         if not ejercicio:
             return JsonResponse({"error": "No hay ejercicios disponibles"}, status=400)
@@ -83,6 +99,7 @@ class DiagnosticTestView(View):
         context = {
             "ejercicio": ejercicio,
             "contexto": contexto,
+            "diagnostico": diagnostico
         }
         return render(request, "diagnostico/index.html", context)
     
@@ -227,6 +244,8 @@ class DiagnosticTestView(View):
             
               # Si no finaliza, devolver siguiente ejercicio
         siguiente_ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+        
+        
         if not siguiente_ejercicio:
             # Caso extremo: no hay más ejercicios
             diagnostico.finalizado = True
@@ -238,11 +257,10 @@ class DiagnosticTestView(View):
                 "theta": theta_actual,
                 "error": se
             })
+            # Contextualizar
+            
 
-        contexto = {
-            "display_text": siguiente_ejercicio.enunciado,
-            "hint": "Pista aquí"
-        }
+        contexto = contextualize_exercise_diagnostico(siguiente_ejercicio)
 
         return JsonResponse({
             "success": True,

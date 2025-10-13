@@ -1,13 +1,13 @@
 {% load static %}
 
-{% block title %}SINEKYS – Factorización{% endblock %}
+{% block title %}SINEKYS{% endblock %}
 
 {% block content %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>SINEKYS – Factorización</title>
+  <title>SINEKYS</title>
   <style>
     {% comment %} * { 
       box-sizing: border-box;
@@ -25,12 +25,15 @@
 
 <main>
   <div id="diagnostico-root"
-       data-duration="3540"           
-       data-diagnostico-id="{{ diagnostico.id }}">
+       data-duracion="{{diagnostico.duracion_segundos}}"           
+       data-diagnostico-id="{{ diagnostico.id }}"
+       data-fecha-inicio="{{ diagnostico.fecha_inicio|date:'c' }}"
+      >
     <div class="time">Tiempo: --:--</div>
   
-  <div class="main-container">
+<div class="loading-bar" id="loading-bar"> -------------- Queda pendiente -------------- </div>
 
+    <div class="main-container">
 <div class="exercise">
   <p id="enunciado">{{ contexto.display_text }}</p>
   
@@ -62,7 +65,7 @@
   </div>
 </main>
   <footer>
-    <button class="finalize-btn" id="finalize-btn" type="button">Terminar</button>
+    <button class="finalize-btn" id="finalize-btn" type="button">Siguiente</button>
   </footer>
 </body>
 </html>

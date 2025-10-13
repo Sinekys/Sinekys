@@ -141,7 +141,6 @@ class IntentoPaso(models.Model):
         verbose_name=_('Datos auxiliares'),
         help_text=_('Valores o variables intermedias')
     )
-
     class Meta:
         unique_together = ('intento', 'orden')
         ordering = ['orden']

@@ -19,10 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let timer = null;
 
+  
   function startTimerFromPageLoad() {
-    const serverNow = new Date().toISOString(); // o pide server_now al backend si necesitas alta precisión //revisar estooooooooooo
-    const endTime = new Date(Date.now() + durationDefault * 1000).toISOString();
-    startTimerWithServerInfo(serverNow, endTime);
+    const fechaInicioIso = root.dataset.fechaInicio;
+    const duracionSegundos = parseInt(root.dataset.duracion, 10) || 3540;
+
+    if (!fechaInicioIso){
+      alert("Error: no se pudo determinr cuando comenzó la prueba x_X");
+      window.location.href = '/';
+      return
+    }
+    const fechaInicio = new Date(fechaInicioIso);
+    const endTime = new Date(fechaInicio.getTime() + duracionSegundos * 1000);
+    startTimerWithServerInfo(fechaInicio.toISOString(), endTime.toISOString());
   }
 
   function startTimerWithServerInfo(serverNowIso, endTimeIso) {
@@ -43,12 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function enviarRespuesta() {
     finalizeBtn.disabled= true;
-
-    const ejerciciosId = ejercicioIdInput.value;
-      const pasos = Array.from(stepsContainer.getElementsByClassName('step-input'))
+    let ejerciciosId;
+    let pasos;
+    try{
+      ejerciciosId = ejercicioIdInput.value;
+      pasos = Array.from(stepsContainer.getElementsByClassName('step-input'))
                         .map(el => el.value.trim())
                         .filter(v => v);
-    try{
       if (pasos.length === 0) {
         alert('Completa al menos un paso.');
         return;
@@ -76,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
           document.querySelector('.hint-text p').textContent = data.contexto.hint || '';
           ejercicioIdInput.value = data.ejercicio.id;
         }
-      
+        // ✅ El temporizador sigue corriendo (no se reinicia)
       } else {
         alert(data.motivo || 'Diagnóstico finalizado.');
         window.location.href = '/';
@@ -88,5 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   finalizeBtn.addEventListener('click', enviarRespuesta);
+
   startTimerFromPageLoad();
 });

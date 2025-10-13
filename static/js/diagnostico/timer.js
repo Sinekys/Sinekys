@@ -1,9 +1,4 @@
 
-// Objetivo, tener un temporizador de 1 hora para el usuario
-// Donde inicia cuando este empiece la prueba
-// y sea independiente a lo que haga el alumno, 
-
-// static/js/diagnostico/timer.js
 import { parseISO } from './utils.js';
 
 export class CountdownTimer {
