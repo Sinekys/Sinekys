@@ -1,12 +1,9 @@
-// static/js/diagnostico/main.js
-
 import { submitAnswer } from './network.js';
 import { CountdownTimer } from './timer.js';
 import { bindStepButtons, updateTimeDisplay, resetStepsContainer } from './ui-controllers.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.getElementById('diagnostico-root');
-  const durationDefault = parseInt(root.dataset.duration || '3540', 10); // 59 min
   const timeElement = document.querySelector('.time');
   const enunciadoElement = document.getElementById('enunciado');
   const stepsContainer = document.getElementById('steps-container');
@@ -15,64 +12,64 @@ document.addEventListener('DOMContentLoaded', () => {
   const finalizeBtn = document.getElementById('finalize-btn');
   const ejercicioIdInput = document.getElementById('ejercicio-id');
 
-  bindStepButtons({addBtn: addStepBtn, removeBtn: removeStepBtn, stepsContainer});
+  bindStepButtons({ addBtn: addStepBtn, removeBtn: removeStepBtn, stepsContainer });
 
+  // leer segundos restantes enviados por el servidor (data-remaining-seconds -> dataset.remainingSeconds)
+  const remainingFromServer = parseInt(root.dataset.remainingSeconds || '0', 10);
   let timer = null;
 
-  
   function startTimerFromPageLoad() {
-    const fechaInicioIso = root.dataset.fechaInicio;
-    const duracionSegundos = parseInt(root.dataset.duracion, 10) || 3540;
-
-    if (!fechaInicioIso){
-      alert("Error: no se pudo determinr cuando comenzó la prueba x_X");
+    if (isNaN(remainingFromServer) || remainingFromServer < 0) {
+      console.error("Error: tiempo restante inválido en data-remaining-seconds.");
       window.location.href = '/';
-      return
+      return;
     }
-    const fechaInicio = new Date(fechaInicioIso);
-    const endTime = new Date(fechaInicio.getTime() + duracionSegundos * 1000);
-    startTimerWithServerInfo(fechaInicio.toISOString(), endTime.toISOString());
-  }
 
-  function startTimerWithServerInfo(serverNowIso, endTimeIso) {
-    if (timer) timer.stop();
+    if (remainingFromServer === 0) {
+      // Si ya está vencido al cargar la página
+      handleTimeUp();
+      return;
+    }
+
     timer = new CountdownTimer({
-      serverNowIso,
-      endTimeIso,
+      remainingSeconds: remainingFromServer,
       onTick: (remaining) => updateTimeDisplay(timeElement, remaining),
       onFinish: () => handleTimeUp()
     });
     timer.start();
   }
 
-  async function handleTimeUp() {
-    alert('Tiempo agotado. Se finalizará el diagnóstico.');
-    window.location.href = '/';
+  function handleTimeUp() {
+    try {
+      alert('Tiempo agotado. Se finalizará el diagnóstico.');
+    } finally {
+      window.location.href = '/';
+    }
   }
 
   async function enviarRespuesta() {
-    finalizeBtn.disabled= true;
-    let ejerciciosId;
+    finalizeBtn.disabled = true;
     let pasos;
-    try{
-      ejerciciosId = ejercicioIdInput.value;
+    try {
       pasos = Array.from(stepsContainer.getElementsByClassName('step-input'))
-                        .map(el => el.value.trim())
-                        .filter(v => v);
+        .map(el => el.value.trim())
+        .filter(v => v);
       if (pasos.length === 0) {
         alert('Completa al menos un paso.');
         return;
       }
-    }finally{
-      finalizeBtn.disabled = false
+    } finally {
+      finalizeBtn.disabled = false;
     }
 
-    const remaining = timer ? timer._remainingSeconds() : 0;
+    // valor público y fiable desde el timer del cliente (indicativo)
+    const remainingClient = timer ? timer.getRemainingSeconds() : 0;
 
     const payload = {
-      ejercicio_id: parseInt(ejerciciosId, 10),
+      ejercicio_id: parseInt(ejercicioIdInput.value, 10),
       respuesta_estudiante: pasos[pasos.length - 1],
-      tiempo_en_segundos: remaining,
+      tiempo_en_segundos: remainingClient,   // compatibilidad legacy
+      remaining_seconds: remainingClient,    // campo explícito interpretado por backend
       pasos: pasos
     };
 
@@ -80,13 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await submitAnswer(payload);
       if (data.success && !data.final) {
         resetStepsContainer(stepsContainer);
-        // Actualizar enunciado con la respuesta del backend
         if (data.contexto?.display_text) {
           enunciadoElement.textContent = data.contexto.display_text;
-          document.querySelector('.hint-text p').textContent = data.contexto.hint || '';
+          const hintP = document.querySelector('.hint-text p');
+          if (hintP) hintP.textContent = data.contexto.hint || '';
           ejercicioIdInput.value = data.ejercicio.id;
         }
-        // ✅ El temporizador sigue corriendo (no se reinicia)
       } else {
         alert(data.motivo || 'Diagnóstico finalizado.');
         window.location.href = '/';

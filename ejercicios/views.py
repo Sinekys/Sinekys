@@ -24,6 +24,9 @@ from .requestdiagnostico import contextualize_exercise_diagnostico
 # Fórmulas
 from ejercicios.services import actualizar_diagnostico, seleccionar_siguiente_ejercicio
 
+# logs
+import logging
+
 
 
 # Normalizar respuesta
@@ -63,6 +66,8 @@ def evaluar_respuesta(respuesta_estudiante: str, respuesta_correcta: str) -> tup
 @method_decorator(login_required, name='dispatch') #Verifica si está loggeado
 class DiagnosticTestView(View):
     
+    
+    
     def get(self, request):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return self._get_json_response(request)
@@ -90,16 +95,18 @@ class DiagnosticTestView(View):
             print(f"Diagnóstico ID: {diagnostico.id}, fecha_inicio: {diagnostico.fecha_inicio}")
         except Estudiante.DoesNotExist:
             return HttpResponseBadRequest('Usuario no encontrado')
-        
-        
+        server_now = timezone.now()
+
         if not ejercicio:
             return JsonResponse({"error": "No hay ejercicios disponibles"}, status=400)
-        
+
+        remaining_seconds = int(diagnostico.tiempo_restante())
         contexto = contextualize_exercise_diagnostico(ejercicio)
         context = {
             "ejercicio": ejercicio,
             "contexto": contexto,
-            "diagnostico": diagnostico
+            "diagnostico": diagnostico,
+            "remaining_seconds": remaining_seconds
         }
         return render(request, "diagnostico/index.html", context)
     
@@ -127,12 +134,8 @@ class DiagnosticTestView(View):
             "contexto":contexto
             })
     
-    # def get_absolute_url(self):
-    #     return reverse('events:event-detail', kwargs={'pk':self.pk})
-    
     
 
-    
     
     @transaction.atomic #Debo documentar esto, es para asegurar consistencia en los datos
     def post(self, request):
@@ -183,6 +186,34 @@ class DiagnosticTestView(View):
         
         # evaluar
         es_correcto, puntos = evaluar_respuesta(respuesta_estudiante, ejercicio.solucion)
+       
+        server_remaining = diagnostico.tiempo_restante() #float en seg
+        server_remaining_clamped = max(0.0, float(server_remaining))
+            
+        tiempo_usado_server = float(diagnostico.duracion_segundos) - server_remaining_clamped
+            
+        if tiempo_usado_server <0:
+            tiempo_usado_server = 0.0
+        client_remaining = None
+        try:
+            client_remaining = float(payload.get("remaining_seconds")) if payload.get("remaining_seconds") else None
+        except Exception:
+            client_remaining = None
+        
+
+        if client_remaining is not None and abs(client_remaining - server_remaining_clamped) > 5:
+        # diferencia mayor a 5s -> loggear (no bloquear)
+            logging.getLogger(__name__).warning(
+                "Client-reported remaining (%s) differs from server (%s) for diagnostico %s / estudiante %s",
+                client_remaining, server_remaining_clamped, diagnostico.id, estudiante.pk
+            )
+       
+    #    comprobación extra por si expiró entre peticiones
+        if diagnostico.is_expired():
+            diagnostico.finalizado = True
+            diagnostico.save(update_fields=["finalizado"])
+            return JsonResponse({"success": True, "final":True,"motivo":"Tiempo agotado antes del envío"}, status=200)
+        
         
         # Crwar intento
         intento = Intento.objects.create(
@@ -191,7 +222,7 @@ class DiagnosticTestView(View):
             respuesta_estudiante=respuesta_estudiante,
             es_correcto=es_correcto,
             puntos=puntos,
-            tiempo_en_segundos=tiempo_en_segundos,
+            tiempo_en_segundos=tiempo_usado_server,
             fecha_intento=timezone.now()
         )
         
