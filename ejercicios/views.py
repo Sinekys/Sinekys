@@ -66,8 +66,6 @@ def evaluar_respuesta(respuesta_estudiante: str, respuesta_correcta: str) -> tup
 @method_decorator(login_required, name='dispatch') #Verifica si está loggeado
 class DiagnosticTestView(View):
     
-    
-    
     def get(self, request):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return self._get_json_response(request)
@@ -92,10 +90,10 @@ class DiagnosticTestView(View):
                     diagnostico.fecha_inicio = timezone.now()
                     diagnostico.save(update_fields=['fecha_inicio'])
             ejercicio = seleccionar_siguiente_ejercicio(estudiante)
-            print(f"Diagnóstico ID: {diagnostico.id}, fecha_inicio: {diagnostico.fecha_inicio}")
+            logging.getLogger(__name__).info(f"Diagnóstico ID: {diagnostico.id}, fecha_inicio: {diagnostico.fecha_inicio}")
         except Estudiante.DoesNotExist:
             return HttpResponseBadRequest('Usuario no encontrado')
-        server_now = timezone.now()
+        # server_now = timezone.now()
 
         if not ejercicio:
             return JsonResponse({"error": "No hay ejercicios disponibles"}, status=400)
