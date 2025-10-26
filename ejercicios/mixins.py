@@ -74,7 +74,7 @@ def prepare_next_payload(estudiante, wants_json:bool = False) -> Tuple[Optional[
     }
     return payload, None
 
-def crear_intento_servidor(estudiate, ejercicio,respuesta_estudiante:str, es_correcto: bool, pasos: list, diagnostico: Diagnostico):
+def crear_intento_servidor(estudiante, ejercicio,respuesta_estudiante:str, es_correcto: bool, pasos: list, diagnostico: Diagnostico):
     # Crear intento e intento paso usando el tiempo calculado por el servidor
     # devuelve el intento creado
     
@@ -104,8 +104,31 @@ def crear_intento_servidor(estudiate, ejercicio,respuesta_estudiante:str, es_cor
         )
     return intento
 
+# Helpers de respuesta
+# Helpers de respuesta
+# Helpers de respuesta
+def render_diagnostico_template(request,ejercicio,contexto,diagnostico,remaining_seconds):
+    return render(request, "diagnostico/index.html",{
+        "ejercicio": ejercicio,
+        "contexto": contexto,
+        "diagnostico": diagnostico,
+        "remaining_seconds": remaining_seconds
+    })
 
-
+def json_net_excercise_response(ejercicio, contexto, theta=None, se=None, num_items=None):
+    return JsonResponse({
+        "success": True,
+        "final": False,
+        "theta": theta,
+        "error": se,
+        "num_items": num_items,
+        "ejercicio": {
+            "id": ejercicio.id,
+            "enunciado": ejercicio.enunciado,
+            "dificultad": float(ejercicio.dificultad),
+        },
+        "contexto": contexto 
+    })
 
 
 class DiagnosticoCompletadoMixin:
