@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -124,7 +124,7 @@ nav ul li a:hover {
     <nav style="width: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <!-- Logo izquierda -->
-            <a style="color: white; text-decoration: none; font-weight: bold; font-size: 1.5rem;" href="{% url 'index' %}">
+            <a style="color: white; text-decoration: none; font-weight: bold; font-size: 1.5rem;" href="{% url 'mainPage' %}">
                 {% if request.user.is_anonymous %}SINEKYS{% else %}Menú{% endif %}
             </a>
 
@@ -140,7 +140,10 @@ nav ul li a:hover {
                 {% else %}
                     <li><a href="{% url 'goals' %}">Perfil</a></li>
                     <li><a href="{% url 'about' %}">Progreso</a></li>
-                    <li><a href="{% url 'diagnostico' %}">Prueba de diagnóstico</a></li>
+                    {% comment %} <li><a href="{% url 'diagnostico' %}">Prueba de diagnóstico</a></li> {% endcomment %}
+                    <button id="btn-diagnostico" style="background: none; border: none; color: white; cursor: pointer; text-decoration: underline;">
+                        Prueba de diagnóstico
+                    </button>
                 {% endif %}
             </ul>
 

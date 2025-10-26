@@ -1,17 +1,40 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block content%}
+{% block content %}
+<ul style="list-style: none; display: flex; gap: 30px; margin: 0; padding: 0;">               
+    {% if diagnostico_completado %}
+        <li><a style="color: white; text-decoration: none;" href="{% url 'ejercicio' %}">Ejercicio</a></li>
+        <li><a style="color: white; text-decoration: none;" href="{% url 'matchmakingGroup' %}">Buscar grupo</a></li>
+        {% comment %} <li><a style="color: white; text-decoration: none;" href="{% url 'continuarEjercioGrupal' %}">Continuar ejercicio grupal</a></li> {% endcomment %}
+    {% else %}
+        <li style="color: #ccc;">Ejercicio (requiere diagnóstico)</li>
+        <li style="color: #ccc;">Buscar grupo (requiere diagnóstico)</li>
+        <li style="color: #ccc;">Continuar ejercicio grupal (requiere diagnóstico)</li>
+    {% endif %}
+    
+</ul>
 
-    <ul style="list-style: none; display: flex; gap: 30px; margin: 0; padding: 0;">               
-        {% comment %} <li><a href="{% url 'excercise' %}">Ejercicio</a></li>
-        <li><a href="{% url 'groupMatchmaking' %}">Buscar grupo</a></li>
-        <li><a href="{% url 'continueGroupExcercise' %}">Continuar ejercicio grupal</a></li> {% endcomment %}
+<!-- Modal de confirmación -->
+<div id="modal-confirmacion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; color:black; padding: 30px; border-radius: 10px; max-width: 500px; text-align: center;">
+        <h3>⚠️ Importante</h3>
+        <p>La prueba de diagnóstico dura aproximadamente <strong>1 hora</strong> y no se puede pausar una vez iniciada.</p>
+        <p>¿Deseas continuar?</p>
+        <div style="margin-top: 20px;">
+            <button id="btn-cancelar" style="background: #e74c3c; color: white; border: none; padding: 8px 20px; border-radius: 5px; margin-right: 10px;">Cancelar</button>
+            <a href="{% url 'diagnostico' %}" style="background: #2ecc71; color: white; text-decoration: none; padding: 8px 20px; border-radius: 5px; display: inline-block;">Sí, comenzar</a>
+        </div>
+    </div>
+</div>
 
-        <li><a style="color: white; text-decoration: none;" href="#">Ejercicio</a></li>
-        <li><a style="color: white; text-decoration: none;" href="#">Buscar grupo</a></li>
-        <li><a style="color: white; text-decoration: none;" href="#">Continuar ejercicio grupal</a></li>
-    </ul>
+<script>
+    document.getElementById('btn-diagnostico').addEventListener('click', function() {
+        document.getElementById('modal-confirmacion').style.display = 'flex';
+    });
 
-
+    document.getElementById('btn-cancelar').addEventListener('click', function() {
+        document.getElementById('modal-confirmacion').style.display = 'none';
+    });
+</script>
 {% endblock %}

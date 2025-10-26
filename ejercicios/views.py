@@ -1,9 +1,7 @@
-# ejercicios/views.py
-from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
-from django.db.models import F
+
+from django.shortcuts import render,get_object_or_404
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.utils.decorators import method_decorator
 from django.db import transaction
@@ -11,21 +9,29 @@ from django.utils import timezone
 # from django.urls import reverse
 import json
 import re
-import numpy
+
+# registro
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
 # Models
-from ejercicios.models import Ejercicio, Intento, IntentoPaso, EjercicioVecesMostrado
+from ejercicios.models import Ejercicio, Intento, IntentoPaso 
 from accounts.models import Estudiante, Diagnostico
+
+# services
+    # here
+from ejercicios.services import actualizar_diagnostico, seleccionar_siguiente_ejercicio
+from accounts.services import obtener_o_validar_diagnostico, diagnostico_activo
 
 # API ChatGPT
 # from request import contextualize_exercise
 from .requestdiagnostico import contextualize_exercise_diagnostico
-
-# Fórmulas
-from ejercicios.services import actualizar_diagnostico, seleccionar_siguiente_ejercicio
+# from ..request import contextualize_exercise
 
 # logs
 import logging
+# Mixins creados
+from .mixins import DiagnosticoCompletadoMixin
 
 
 
@@ -63,42 +69,116 @@ def evaluar_respuesta(respuesta_estudiante: str, respuesta_correcta: str) -> tup
     puntos = 1.0 if es_correcto else 0.0
     return (es_correcto, puntos)
 
-@method_decorator(login_required, name='dispatch') #Verifica si está loggeado
+@method_decorator(login_required, name='dispatch')
 class DiagnosticTestView(View):
     
-    def get(self, request):
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return self._get_json_response(request)
-        else:
-            return self._get_html_response(request)
-        
-    def _get_html_response(self, request):
+    def _prepare_next(self,request,wants_json: bool = False):
+        # Logica comun entre respuestas html y json:
+        # get: Estudiante, Diagnostico, Siguiente Ejercicio y Contexto
         try:
             estudiante = request.user.estudiante
-            with transaction.atomic():
-                diagnostico, created = Diagnostico.objects.get_or_create(
-                    estudiante = estudiante,
-                    defaults={
-                        'theta':0.0,
-                        'error_estimacion': 1.0,
-                        'finalizado':False,
-                        'fecha_inicio': timezone.now()
-                    }
-                )
-                        
-                if  not created and diagnostico.fecha_inicio is None and not diagnostico.finalizado:
-                    diagnostico.fecha_inicio = timezone.now()
-                    diagnostico.save(update_fields=['fecha_inicio'])
-            ejercicio = seleccionar_siguiente_ejercicio(estudiante)
-            logging.getLogger(__name__).info(f"Diagnóstico ID: {diagnostico.id}, fecha_inicio: {diagnostico.fecha_inicio}")
         except Estudiante.DoesNotExist:
-            return HttpResponseBadRequest('Usuario no encontrado')
-        # server_now = timezone.now()
+            if wants_json:
+                return(JsonResponse({"error":"Estudiante no encontrado"}, status=400), None)
+            return (HttpResponseBadRequest('Usuario no encontrado'), None)
+        
+        # json or html
+        if wants_json:
+            diag_activo = diagnostico_activo(estudiante)
+            if not diag_activo:
+                return(JsonResponse({
+                    "error": "El diagnostico ya finalizó o expiró",
+                    "finalizado": True,
+                }, status=403), None)
+            
+            diagnostico = diag_activo
+        else: 
+            diagnostico = obtener_o_validar_diagnostico(estudiante)
+            if diagnostico.finalizado or diagnostico.is_expired():
+                motivo = 'Tiempo agotado' if diagnostico.is_expired() else 'Precisión alcanzada'
+                return (render(request, "diagnostico/finalizado.html",{
+                    'diagnostico': diagnostico,
+                    'motivo': motivo
+                }), None)
+                
+        ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+        if not ejercicio:
+            diagnostico.finalizado = True
+            diagnostico.save(update_field=['finalizado'])
+            if wants_json:
+                return (JsonResponse({
+                    "error": "No hay ejercicios disponibles",
+                    "finalizado": True,
+                },status=200), None)
+            return (render(request, "diagnostico/finalizado.html",{
+                'diagnostico': diagnostico,
+                'motivo': 'no hay más ejercicios disponibles'
+            }), None)
+        remaining_seconds = max(0, int(diagnostico.tiempo_restante()))
+        contexto = contextualize_exercise_diagnostico(ejercicio)
+
+        payload = {
+            "estudiante": estudiante,
+            "diagnostico": diagnostico,
+            "ejercicio": ejercicio,
+            "contexto": contexto,
+            "remaining_seconds": remaining_seconds
+        }
+        return (None, payload)
+
+
+    def get(self, request):
+        accept = request.headers.get('Accept','')
+        wants_json = 'application/json' in accept or request.herads.get('X-Requested-With') == 'XMLHttpRequest'
+        err, payload = self._prepare_next(request, wants_json=wants_json)
+        if err:
+            return err
+        
+        if wants_json:
+            ejercicio = payload["ejercicio"]
+            contexto = payload["contexto"]
+            return JsonResponse({
+                "ejercicio": {
+                    "id": ejercicio.id,
+                    "enunciado": ejercicio.enunciado,
+                    "dificultad": float(ejercicio.dificultad)
+                },
+                "contexto": contexto
+            })
+        else:
+            return render(request, "diagnostico/index.html", {
+                "ejercicio": payload["ejercicio"],
+                "contexto": payload["contexto"],
+                "diagnostico": payload["diagnostico"],
+                "remaining_seconds": payload["remaining_seconds"]
+            })
+        
+    def _get_html_response(self, request):
+
+        diagnostico = obtener_o_validar_diagnostico(estudiante)
+        
+        if diagnostico.finalizado or diagnostico.is_expired():
+            # redirigir al inicio
+            return render(request, "diagnostico/finalizado.html", {
+                'diagnostico': diagnostico,
+                'motivo': 'Tiempo agotado' if diagnostico.is_expired() else 'Precisión alcanzada'
+            })
+            
+            #get ejercicio 
+        ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+        # logging.getLogger(__name__).info(f"Diagnóstico ID: {diagnostico.id}, fecha_inicio: {diagnostico.fecha_inicio}")
 
         if not ejercicio:
-            return JsonResponse({"error": "No hay ejercicios disponibles"}, status=400)
-
-        remaining_seconds = int(diagnostico.tiempo_restante())
+            diagnostico.finalizado = True
+            diagnostico.save(update_fields=['finalizado'])
+            return render(request, "diagnostico/finalizado.html",{
+                'diagnostico': diagnostico,
+                'motivo': 'no hay más ejercicios'
+            })
+            
+            
+            
+        remaining_seconds = max(0,int(diagnostico.tiempo_restante()))
         contexto = contextualize_exercise_diagnostico(ejercicio)
         context = {
             "ejercicio": ejercicio,
@@ -112,30 +192,44 @@ class DiagnosticTestView(View):
     def _get_json_response(self, request):
         try:
             estudiante = request.user.estudiante
-            ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+            
         except Estudiante.DoesNotExist:
             return HttpResponseBadRequest('Usuario no encontrado x_x')
         
-        if not ejercicio:
-            return JsonResponse({"error":"Por algún motivo no hay ejercicio disponibles D:"},status=400)
+    
+        diagnostico_activo = diagnostico_activo(estudiante)
+        if not diagnostico_activo:
+            return JsonResponse({
+                "error": "El diagnóstico ya finalizó o expiró",
+                "finalizado": True
+            }, status=403)
         
-        contexto = {
-            "display_text": ejercicio.enunciado,
-            "hint": f"Pista aquí"
-        }
+        
+        ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+        
+        if not ejercicio:
+            diag = Diagnostico.objects.get(estudiante=estudiante)
+            diag.finalizado = True
+            diag.save(update_fields=['finalizado'])
+            return JsonResponse({"error":"No hay ejercicios disponibles",
+                                "finalizado": True,
+                                },status=200)
+    
+    
+        contexto = contextualize_exercise_diagnostico(ejercicio)
         return JsonResponse({
-                "ejercicio": {
-                "id":ejercicio.id,
-                "enunciado": ejercicio.enunciado,
-                "dificultad": float(ejercicio.dificultad)
-            },
-            "contexto":contexto
-            })
+                    "ejercicio": {
+                    "id":ejercicio.id,
+                    "enunciado": ejercicio.enunciado,
+                    "dificultad": float(ejercicio.dificultad)
+                },
+                "contexto":contexto
+                })
     
     
 
     
-    @transaction.atomic #Debo documentar esto, es para asegurar consistencia en los datos
+    @transaction.atomic
     def post(self, request):
         # necesito obtener los pasos y la respuesta del estudiante
         if request.content_type != "application/json":
@@ -151,29 +245,21 @@ class DiagnosticTestView(View):
         except Estudiante.DoesNotExist:
             return JsonResponse({"error":"Estudiante no encontrado"}, 400)
         
-        diagnostico, created = Diagnostico.objects.get_or_create(
-            estudiante=estudiante,
-            defaults={
-                'theta':0.0,
-                'error_estimacion':1.0,
-                'finalizado':False
-            }
-        )
+        diagnostico_activo = diagnostico_activo(estudiante) 
         
-        # Verificar si el exámen ya finalizó o expiró
-        
-        if diagnostico.finalizado or diagnostico.is_expired(): 
+
+        if not diagnostico_activo:
             return JsonResponse({
             "success": True,
             "final": True,
             "motivo": "Diagnostico ya finalizado o tiempo agotado",
             "mensaje":"Respuesta registrada correctamente"
         })
+        diagnostico = diagnostico_activo #ya está activo
         
         # payload para los ejercicios
         ejercicio_id = payload.get("ejercicio_id")
         respuesta_estudiante = payload.get("respuesta_estudiante", "").strip()
-        tiempo_en_segundos = float(payload.get("tiempo_en_segundos",0))
         pasos = payload.get("pasos", []) #lista de strings
         
         
@@ -271,7 +357,7 @@ class DiagnosticTestView(View):
                 "error": se
             })
             
-              # Si no finaliza, devolver siguiente ejercicio
+             
         siguiente_ejercicio = seleccionar_siguiente_ejercicio(estudiante)
         
         
@@ -286,9 +372,7 @@ class DiagnosticTestView(View):
                 "theta": theta_actual,
                 "error": se
             })
-            # Contextualizar
             
-
         contexto = contextualize_exercise_diagnostico(siguiente_ejercicio)
 
         return JsonResponse({
@@ -308,3 +392,31 @@ class DiagnosticTestView(View):
         
         # Cómo determino el umbral del error estándar?
         # No lo puedo suponer
+        
+# Tengo pensado en refactorizar  
+class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
+    def get(self, request):
+        
+        return render(request, 'ejercicios/ejercicio.html')
+    
+    def post(self, request):
+        
+        pass
+    
+    
+class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
+    def get(self,request):
+        
+        return render(request,'ejercicios/matchmaking_group.html')
+    
+    
+    def post(self,request):
+        
+        pass
+    
+# No sé si voy a necesitar esta clase la verdad...
+# class ContinuarEjercicioGrupal(MatchMakingGroupView,DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
+    
+    
+    
+    

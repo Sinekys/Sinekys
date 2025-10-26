@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div style="text-align: center; margin-top: 50px;">
+    <h2>Acceso restringido</h2>
+    <p style="color: #e74c3c; font-size: 1.2em;">
+        {% if messages %}
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        {% endif %}
+    </p>
+    <p>Puedes regresar al inicio o acceder a la prueba de diagnóstico desde tu panel.</p>
+    <a href="{% url 'mainPage' %}" style="color: white; text-decoration: none; background: #3498db; padding: 10px 20px; border-radius: 5px; display: inline-block; margin-top: 20px;">
+        Volver al inicio
+    </a>
+</div>
+{% endblock %}

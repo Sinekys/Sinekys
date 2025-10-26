@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align: center; margin-top: 50px;">
+    <h2>Prueba de diagnóstico finalizada</h2>
+    <p><strong>Motivo:</strong> {{ motivo }}</p>
+    <p>Tu nivel estimado (theta): <strong>{{ diagnostico.theta|floatformat:3 }}</strong></p>
+    <p>Error de estimación: <strong>{{ diagnostico.error_estimacion|floatformat:3 }}</strong></p>
+</div>
+
+<script>
+    setTimeout(function(){
+        window.location.href = "{% url 'mainPage' %}"
+    },3000)
+</script>
+{% endblock %}
