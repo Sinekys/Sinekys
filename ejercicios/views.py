@@ -15,19 +15,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 
 # Models
-from ejercicios.models import Ejercicio, Intento, IntentoPaso 
+from ejercicios.models import Ejercicio, Intento, IntentoPaso,PasoEjercicio,Feedback,FeedbackPasos,TipoFeedback
 from accounts.models import Estudiante, Diagnostico
 
 # services
-    # here
 from ejercicios.services import actualizar_diagnostico, seleccionar_siguiente_ejercicio
 from accounts.services import obtener_o_validar_diagnostico, diagnostico_activo
-
-
-# API ChatGPT
-# from request import contextualize_exercise
-from .requestdiagnostico import contextualize_exercise_diagnostico
-# from ..request import contextualize_exercise
 
 # logs
 import logging
@@ -39,7 +32,7 @@ from .mixins import (
     prepare_next_payload,
     crear_intento_servidor,
     render_diagnostico_template,
-    json_net_excercise_response,    
+    json_next_excercise_response,    
     DiagnosticoCompletadoMixin
 
 )
@@ -89,7 +82,7 @@ class DiagnosticTestView(View):
         if err_resp:
             return err_resp
 
-        payload, err = prepare_next_payload(estudiante, wants_json=wants_json)
+        payload, err = prepare_next_payload(estudiante, wants_json=wants_json, modo="diagnostico")
         if err:
             return err
 
@@ -245,7 +238,7 @@ class DiagnosticTestView(View):
                 "hint": "hint"
             }
             
-        return json_net_excercise_response(siguiente_ejercicio,contexto,theta=theta_actual,se=se,num_items=num_items)
+        return json_next_excercise_response(siguiente_ejercicio,contexto,theta=theta_actual,se=se,num_items=num_items)
         
         
         # Cómo determino el umbral del error estándar?
@@ -253,16 +246,33 @@ class DiagnosticTestView(View):
         # No lo puedo suponer
         
 # Tengo pensado en refactorizar  
+@method_decorator(login_required,name='dispatch')
 class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
-    def get(self, request):
-        
-        return render(request, 'ejercicios/ejercicio.html')
-    
+    def get(self, request, ejercicio_id= None):
+        if ejercicio_id:
+            ejercicio = get_object_or_404(Ejercicio pk=ejercicio_id)
+            contexto = {"display_text": ejercicio.enunciado, "hint":""}
+            return render(request, "ejercicio/ejercicio.html", {"ejercicio": ejercicio}, "contexto":contexto)
+        # fallback
+        return render(request, "ejercicios/ejercicioNotFound.html", )
     def post(self, request):
+        if request.content_type != "application/json":
+            return JsonResponse({"error": "Se esperaba application/json"}, status=400)
+        estudiante, err = get_estudiante_from_request(request)
+        if err:
+            return err
         
-        pass
-    
-    
+        data = json.loads(request.body)
+        ejercicio_id = data.get("ejercicio_id")
+        respuesta = (data.get("respuesta") or "").strip()
+        pasos = data.get("pasos", [])   
+        
+        ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
+        es_correcto, puntos = evaluar_respuesta(respuesta, ejercicio.solucion)
+        intento = crear_intento_servidor(estudiante,ejercicio,respuesta,es_correcto,pasos)
+        
+        return JsonResponse({"success":True, "es_correcto": es_correcto,"puntos": puntos})
+                    
 class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     def get(self,request):
         
@@ -277,5 +287,58 @@ class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
 # class ContinuarEjercicioGrupal(MatchMakingGroupView,DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     
     
-    
-    
+    # GET /ejercicios/check/<int:intento_id>/
+@method_decorator(login_required, name='dispatch')
+class CheckAnswer(View):
+    def get(self,request, intento_id):
+        estudiante = getattr(request.user, "estudiante", None)
+        if not estudiante:
+            return HttpResponseForbidden("Acceso denegado")
+        
+        intento = get_object_or_404(Intento.objects.select_related("ejercicio","estudiante"), pk=intento_id)
+        
+        if intento.estudiante_id != estudiante.id and not request.user.is_staff:
+            return HttpResponseForbidden("No tienes acceso a este intento")
+        
+        ejercicio = intento.ejercicio
+        
+        # esto ya se hace al crear el intento, pero es bueno revalidarlo para seguridad y consistencia
+        es_correcto = (normalizar_respuesta(intento.respuesta_estudiante) == normalizar_respuesta(ejercicio.solucion))
+        puntos = 1.0 if es_correcto else 0.0
+        
+        pasos_intento = list(intento.pasos.all())
+        pasos_correctos_qs = PasoEjercicio.objects.filter(ejercicio=ejercicio).order_by("orden")
+        pasos_correctos = list(pasos_correctos_qs)
+        
+        feedback = Feedback.objects.filter(intento = intento).order_by("-fecha_feedback").first()
+        feedback_pasos = []
+        if feedback:
+            feedback_pasos = list(FeedbackPasos.objects.filter(feedback=feedback)
+                                  .order_by("orden"
+                                  .select_related("tipo_feedback")))
+            
+        contexto = {
+            "intento": intento,
+            "ejercicio":ejercicio,
+            "es_correcto":es_correcto,
+            "puntos":puntos,
+            "pasos_intento":pasos_intento,
+            "pasos_correctos":pasos_correctos,
+            "feedback":feedback,
+            "feedback_pasos":feedback_pasos,
+        }
+        
+        if request.GET.get("json"):
+            # construir dict minimalista
+            return JsonResponse({
+                "success": True,
+                "intento_id": intento.id,
+                "es_correcto": es_correcto,
+                "puntos": puntos,
+                "pasos_intento": [{"orden": p.orden, "contenido": p.contenido} for p in pasos_intento],
+                "pasos_correctos": [{"orden": p.orden, "contenido": p.contenido} for p in pasos_correctos],
+                "feedback": feedback.feedback if feedback else None
+            })
+
+        # Render HTML
+        return render(request, "ejercicios/check-respuesta.html", contexto)

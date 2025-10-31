@@ -144,7 +144,7 @@ def seleccionar_siguiente_ejercicio(estudiante):
     # Extraer arrays de ids y b
     # Materializar queryset para indexar después
     disponibles = list(disponibles_qs)
-    ids = [item.id for item in disponibles]
+    ids = [item.id for item in disponibles] # ojo aquí
     b_arr = np.array([float(item.dificultad) for item in disponibles], dtype=float)
 
     # calcular probabilidad e información vectorialmente
@@ -158,7 +158,6 @@ def seleccionar_siguiente_ejercicio(estudiante):
 
     return mejor_item
 
-# Veo que hay mucho código repetible, sobre todo z y prob
 
 # Vale hice una prueba con el nuevo modelo y me dio un theta de 3, lo que significaría irrealistamente un 7, o todo bueno, lo que no es verdad pues varias veces me equivoqué a propósito
 # el hecho de usar clip demuestra que se está enmascarando un error, probablemente el mismo que da -11 y 11

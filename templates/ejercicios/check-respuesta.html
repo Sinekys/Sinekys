@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Resultado</h1>
+
+<div class="result">
+  <h2>Ejercicio: {{ ejercicio.enunciado }}</h2>
+  <p>Tu respuesta: <strong>{{ intento.respuesta_estudiante }}</strong></p>
+  <p>Resultado: 
+    {% if es_correcto %}
+      <span class="badge badge-success">Correcto ✓</span>
+    {% else %}
+      <span class="badge badge-danger">Incorrecto ✗</span>
+    {% endif %}
+    (Puntos: {{ puntos }})
+  </p>
+</div>
+
+<hr>
+
+<div class="cols">
+  <section class="student-steps">
+    <h3>Tus pasos</h3>
+    {% if pasos_intento %}
+      <ol>
+        {% for p in pasos_intento %}
+          <li><pre>{{ p.contenido }}</pre></li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p>No ingresaste pasos.</p>
+    {% endif %}
+  </section>
+
+  <section class="correct-steps">
+    <h3>Pasos correctos (solución almacenada)</h3>
+    {% if pasos_correctos %}
+      <ol>
+        {% for p in pasos_correctos %}
+          <li><pre>{{ p.contenido }}</pre></li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p>No hay pasos correctos guardados para este ejercicio.</p>
+    {% endif %}
+  </section>
+</div>
+
+{% if feedback %}
+  <hr>
+  <section class="feedback">
+    <h3>Feedback ({{ feedback.fuente_ia }})</h3>
+    <p>{{ feedback.feedback }}</p>
+    {% if feedback_pasos %}
+      <h4>Feedback por pasos</h4>
+      <ol>
+        {% for fp in feedback_pasos %}
+          <li>[{{ fp.tipo_feedback.nombre }}] <pre>{{ fp.contenido }}</pre></li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  </section>
+{% endif %}
+
+<hr>
+
+<div class="actions">
+  <a href="{% url 'ejercicios-list' %}" class="btn">Volver al inicio</a>
+  <a href="{% url 'ejercicio-random' %}" class="btn btn-primary">Intentar otro ejercicio</a>
+</div>
+{% endblock %}

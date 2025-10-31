@@ -9,8 +9,13 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest 
 
 from typing import Tuple, Optional, Dict, Any
-import logging
 
+def get_type_of_user(request):
+    try:
+        estudiante = request.user.estudiante
+        docente = request.user.docente
+    except Exception:
+        return None, HttpResponseBadRequest("Usuario no encontrado")
 
 # get y validaciones
 def get_estudiante_from_request(request) -> Tuple[Optional[Estudiante], Optional[JsonResponse]]:
@@ -32,13 +37,13 @@ def diagnostico_activo_para_api(estudiante):
     return diagnostico_activo(estudiante)
 
 # Preparas sig ejercicio (html/json)
-def prepare_next_payload(estudiante, wants_json:bool = False) -> Tuple[Optional[Dict[str,Any]], Optional[JsonResponse]]:
+def prepare_next_payload(estudiante, wants_json:bool = False, modo: str='diagnostico') -> Tuple[Optional[Dict[str,Any]], Optional[JsonResponse]]:
     # validar diagnostico
     # seleccionar sig ejercicio
     # generar contexto
     from .requestdiagnostico import contextualize_exercise_diagnostico
     from ejercicios.services import seleccionar_siguiente_ejercicio
-    # from ..request import contextualize_exercise #Para ejercicio solo, conexto acorde a la carrera
+    from ..request import contextualize_exercise #Para ejercicio solo, conexto acorde a la carrera
      
      
     if wants_json:
@@ -63,8 +68,15 @@ def prepare_next_payload(estudiante, wants_json:bool = False) -> Tuple[Optional[
         return None, JsonResponse({"error": "No hay más ejercicios disponibles", "finalizado": True}, status=200)
 
     remaining_seconds = max(0, int(diagnostico.tiempo_restante()))
-    contexto = contextualize_exercise_diagnostico(ejercicio)
     
+    if modo == "diagnostico":
+        contexto = contextualize_exercise_diagnostico(ejercicio)
+    elif modo == "carrera":
+        carrera = getattr(estudiante, "carrera", "General") or "General"
+        contexto = contextualize_exercise(ejercicio,carrera)
+    else:
+        carrera = "general"
+        contexto = contextualize_exercise(ejercicio,carrera)
     payload = {
         "estudiante": estudiante,
         "diagnostico": diagnostico,
@@ -115,7 +127,8 @@ def render_diagnostico_template(request,ejercicio,contexto,diagnostico,remaining
         "remaining_seconds": remaining_seconds
     })
 
-def json_net_excercise_response(ejercicio, contexto, theta=None, se=None, num_items=None):
+
+def json_next_excercise_response(ejercicio, contexto, theta=None, se=None, num_items=None):
     return JsonResponse({
         "success": True,
         "final": False,
