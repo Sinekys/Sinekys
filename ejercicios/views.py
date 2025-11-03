@@ -1,15 +1,17 @@
 from django.views import View
 from django.utils.decorators import method_decorator
 
-from django.shortcuts import render,get_object_or_404
+from django.shortcuts import render,get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.utils.decorators import method_decorator
 from django.db import transaction
 from django.utils import timezone
-# from django.urls import reverse
+from django.urls import reverse
+
 import json
 import re
 
+from django.contrib import messages
 # registro
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -29,9 +31,10 @@ logger = logging.getLogger(__name__)
 # Mixins creados
 from .mixins import (
     get_estudiante_from_request,
-    prepare_next_payload,
+    prepare_next_payload_diagnostico,
+    prepare_next_payload_normal,
     crear_intento_servidor,
-    render_diagnostico_template,
+    # render_diagnostico_template,
     json_next_excercise_response,    
     DiagnosticoCompletadoMixin
 
@@ -82,17 +85,13 @@ class DiagnosticTestView(View):
         if err_resp:
             return err_resp
 
-        payload, err = prepare_next_payload(estudiante, wants_json=wants_json, modo="diagnostico")
+        payload, err = prepare_next_payload_diagnostico(estudiante, wants_json=request.is_ajax())
         if err:
             return err
 
         # payload puede indicar finalizado
         if payload.get("finalizado"):
-            diag = payload["diagnostico"]
-            return render(request, "diagnostico/finalizado.html",{
-                "diagnostico": diag,
-                "motivo": payload.get("motivo", "")
-            })
+            return render(request, "diagnostico/finalizado.html",payload)
 
 
         if wants_json:
@@ -127,7 +126,7 @@ class DiagnosticTestView(View):
             return err_resp
         
         # validar diagnostico activo para API
-        payload_check, err = prepare_next_payload(estudiante, wants_json=True)
+        payload_check, err = prepare_next_payload_diagnostico(estudiante, wants_json=True) #???
         if err:
             return err #incluye caos finalizado
         
@@ -245,34 +244,88 @@ class DiagnosticTestView(View):
         # por qué 0.4???
         # No lo puedo suponer
         
-# Tengo pensado en refactorizar  
 @method_decorator(login_required,name='dispatch')
 class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     def get(self, request, ejercicio_id= None):
-        if ejercicio_id:
-            ejercicio = get_object_or_404(Ejercicio pk=ejercicio_id)
+        if ejercicio_id:            
+            ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
             contexto = {"display_text": ejercicio.enunciado, "hint":""}
-            return render(request, "ejercicio/ejercicio.html", {"ejercicio": ejercicio}, "contexto":contexto)
+            return render(request, "ejercicio/ejercicio.html", {"ejercicio": ejercicio, "contexto":contexto})
         # fallback
-        return render(request, "ejercicios/ejercicioNotFound.html", )
+        estudiante, err = get_estudiante_from_request(request)
+        if err:
+            return err 
+        
+        payload, err_resp = prepare_next_payload_normal(estudiante)
+        if err_resp:
+            messages.error(request, err_resp) # era así?
+            return redirect('home')
+        
+        
+        ejercicio = payload["ejercicio"]
+        contexto = payload["contexto"]
+        
+        return render(request, "ejercicios/ejercicio.html", {
+            "ejercicio": ejercicio,
+            "contexto": contexto,
+            # "diagnostico": diagnostico,
+            # "remaining_seconds": remaining_seconds
+        })
     def post(self, request):
-        if request.content_type != "application/json":
-            return JsonResponse({"error": "Se esperaba application/json"}, status=400)
+        ct = request.content_type or ""
+        if not ct.startswith("application/json"):
+            return JsonResponse({"error":"Se esperaba application/json"}, status=400)
+        
         estudiante, err = get_estudiante_from_request(request)
         if err:
             return err
         
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error":"Json Inválido"}, status =400)
+        
         ejercicio_id = data.get("ejercicio_id")
-        respuesta = (data.get("respuesta") or "").strip()
-        pasos = data.get("pasos", [])   
+        respuesta = (data.get("respuesta") or "").strip()#???
+        pasos = data.get("pasos", [])
+        
+        if not ejercicio_id:
+            return JsonResponse({"error":"falta id del ejercicio"}, status= 400)
         
         ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
         es_correcto, puntos = evaluar_respuesta(respuesta, ejercicio.solucion)
+        
         intento = crear_intento_servidor(estudiante,ejercicio,respuesta,es_correcto,pasos)
         
-        return JsonResponse({"success":True, "es_correcto": es_correcto,"puntos": puntos})
-                    
+        logger.info(
+            "Intento creado (ejercicios.view)_ intento_id=%s  estudiante=%s ejercicio=%s puntos=%s es_correcto=%s",
+            intento.id,estudiante.pk,ejercicio.id,puntos,es_correcto
+        )
+        
+        #Respuesta AJAX (fetch), devolver_intento_id para que el cliente rendirice el resultado
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.GET.get("json")
+        if is_ajax:
+            return JsonResponse({
+                "success": True,
+                "intento_id": intento.id,
+                "es_correcto": es_correcto,
+                "puntos": puntos
+            })
+            
+            
+        # redirigir feedback
+        try:
+            url = reverse("check-respuesta", kwargs={"intento_id":intento.id})
+        except Exception:
+            logger.warning("No existe la URL 'check-respuesta' para redirigir, Devolviendo JSON...")
+            return JsonResponse({
+                "success": True,
+                "intento_id": intento.id,
+                "es_correcto": es_correcto,
+                "puntos":puntos
+            })
+            
+        return redirect(url)
 class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     def get(self,request):
         

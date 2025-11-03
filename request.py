@@ -43,8 +43,6 @@ def safe_create_response(payload, carrera, max_retries=2):
                 raise
             time.sleep(1 + attempt*0.5)
 
-# uso
-# request.py
 def contextualize_exercise(ejercicio, carrera):
     payload = {
         "CARRERA": carrera,

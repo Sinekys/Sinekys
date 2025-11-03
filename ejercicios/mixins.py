@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+# from django.contrib.auth.mixins import LoginRequiredMixin
 from accounts.models import Diagnostico, Estudiante
 from .models import Ejercicio,Intento,IntentoPaso
 from accounts.services import diagnostico_finalizado
@@ -8,7 +8,36 @@ from django.db import transaction
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest 
 
+
 from typing import Tuple, Optional, Dict, Any
+
+
+import logging
+logger = logging.getLogger(__name__)
+
+try:
+    from ejercicios.services import seleccionar_siguiente_ejercicio
+except ImportError:
+    # fallback
+    def seleccionar_siguiente_ejercicio(estudiante):
+        from ejercicios.models import Ejercicio
+        logger.warning("--ERROR-- Usando selección aleatoria | Fallo en importación")
+        return Ejercicio.objects.order_by('?').first()
+try:
+    from .requestdiagnostico import contextualize_exercise_diagnostico
+except ImportError:
+    def contextualize_exercise_diagnostico(ejercicio):
+        logger.warning("Módulo requestdiagnostico no disponible | Usando contexto por defecto")
+        return {"display_text":ejercicio.enunciado, "hint": "Contexto no disponible"}        
+
+try: 
+    from ..request import contextualize_exercise
+except ImportError:
+    def contextualize_exercise(ejercicio,carrera=None):
+        logger.warning('Módulo request no disponible | Usando contexto por defecto')
+        return {"display_text": ejercicio.enunciado, "hint": f'Contexto para {carrera or "General"} no disponible'}
+    
+
 
 def get_type_of_user(request):
     try:
@@ -36,16 +65,32 @@ def diagnostico_activo_para_api(estudiante):
     from accounts.services import diagnostico_activo
     return diagnostico_activo(estudiante)
 
-# Preparas sig ejercicio (html/json)
-def prepare_next_payload(estudiante, wants_json:bool = False, modo: str='diagnostico') -> Tuple[Optional[Dict[str,Any]], Optional[JsonResponse]]:
+
+def select_mode(estudiante,ejercicio, modo: str ):
+    try:
+        if modo == "diagnostico":
+            return contextualize_exercise_diagnostico(ejercicio)
+        else:
+            if not estudiante:
+                raise ValueError("Se requiere ser estudiante en modo normal")
+            carrera = getattr(estudiante, "carrera", "General")
+            if not carrera:
+                carrera = "General"        
+            return contextualize_exercise(ejercicio, estudiante.carrera)
+    except Exception as e:
+        logger.exception("Error al generar contexto para ejercicio %s en modo %s: %s", 
+                        ejercicio.id, modo, str(e))
+        return {
+            "display_text": ejercicio.enunciado,
+            "hint": "Contexto no disponbile actualmente"
+        }
+
+
+def prepare_next_payload_diagnostico(estudiante, wants_json:bool = False) -> Tuple[Optional[Dict[str,Any]], Optional[JsonResponse]]:
     # validar diagnostico
     # seleccionar sig ejercicio
     # generar contexto
-    from .requestdiagnostico import contextualize_exercise_diagnostico
-    from ejercicios.services import seleccionar_siguiente_ejercicio
-    from ..request import contextualize_exercise #Para ejercicio solo, conexto acorde a la carrera
-     
-     
+    
     if wants_json:
         diag = diagnostico_activo_para_api(estudiante)
         if not diag:
@@ -65,18 +110,19 @@ def prepare_next_payload(estudiante, wants_json:bool = False, modo: str='diagnos
     if not ejercicio:
         diagnostico.finalizado = True
         diagnostico.save(update_fields=['finalizado'])
-        return None, JsonResponse({"error": "No hay más ejercicios disponibles", "finalizado": True}, status=200)
+        if wants_json:
+            return None, JsonResponse({"error": "No hay más ejercicios disponibles", "finalizado": True}, status=200)
+        return {
+            "finalizado": True,
+            "diagnostico": diagnostico,
+            "motivo": "No hay más ejercicios disponibles"
+        }, None
+
+    contexto = select_mode(estudiante,ejercicio, "diagnostico") 
 
     remaining_seconds = max(0, int(diagnostico.tiempo_restante()))
     
-    if modo == "diagnostico":
-        contexto = contextualize_exercise_diagnostico(ejercicio)
-    elif modo == "carrera":
-        carrera = getattr(estudiante, "carrera", "General") or "General"
-        contexto = contextualize_exercise(ejercicio,carrera)
-    else:
-        carrera = "general"
-        contexto = contextualize_exercise(ejercicio,carrera)
+    
     payload = {
         "estudiante": estudiante,
         "diagnostico": diagnostico,
@@ -84,7 +130,30 @@ def prepare_next_payload(estudiante, wants_json:bool = False, modo: str='diagnos
         "contexto": contexto,
         "remaining_seconds": remaining_seconds       
     }
+    
+
     return payload, None
+
+
+def prepare_next_payload_normal(estudiante) -> Tuple[Optional[Dict[str,Any]], Optional[str]]:
+    ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+    if not ejercicio:
+        return None, "No hay ejercicios disponibles en este momento"
+    contexto = select_mode( estudiante, ejercicio, "normal")
+
+    payload = {
+        "estudiante": estudiante,
+        "ejercicio": ejercicio,
+        "contexto": contexto
+    }
+    return payload, None
+
+
+
+
+
+
+
 
 def crear_intento_servidor(estudiante, ejercicio,respuesta_estudiante:str, es_correcto: bool, pasos: list, diagnostico: Diagnostico):
     # Crear intento e intento paso usando el tiempo calculado por el servidor

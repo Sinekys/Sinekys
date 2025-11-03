@@ -30,5 +30,5 @@ urlpatterns = [
     # path('loggin/', include(accounts_urls)),
     path('accounts/', include('allauth.urls')),
     
-    path('ejercicios/', include(ejercicios_urls)),
+    path('ejercicio/', include(ejercicios_urls)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -1,4 +1,11 @@
-# servicios: ejercicios/services.py
+# Aca va todo lo referente a formulas
+# Aca va todo lo referente a formulas
+# Aca va todo lo referente a formulas
+# Aca va todo lo referente a formulas
+# básicamente:
+    # Si el código usa request, JsonResponse, render, HttpResponse, no va en services.py, probar en mixins
+    # Si el código calcula, decide, filtra, transforma datos, sí va en services.py. 
+
 import logging
 
 import numpy as np

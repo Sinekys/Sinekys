@@ -3,7 +3,8 @@ from .views import DiagnosticTestView,EjercicioView,MatchMakingGroupView, CheckA
 
 urlpatterns = [
     path('diagnostico/', DiagnosticTestView.as_view(), name='diagnostico'),
-    path('ejercicio/<int:ejercicio_id>', EjercicioView.as_view(), name='ejercicio'),
-    path('ejercicio/check/<int:ejercicio_id>', CheckAnswer.as_view(), name='check-respuesta'),
-    # path('matchmaking-grupo/', MatchMakingGroupView.as_view(), name='matchmakingGroup'),
+    path('', EjercicioView.as_view(), name='ejercicio'),                      
+    path('<int:ejercicio_id>/', EjercicioView.as_view(), name='ejercicio_detalle'), 
+    path('check/<int:intento_id>/', CheckAnswer.as_view(), name='check-respuesta'),
+    path('matchmaking-grupo/', MatchMakingGroupView.as_view(), name='matchmakingGroup'),
 ]

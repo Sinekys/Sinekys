@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from accounts.models import Diagnostico
+from accounts.models import Diagnostico, Estudiante
+from ejercicios.models import Intento
 
 # Create your views here.
 
@@ -16,6 +17,17 @@ def home_view(request):
             estudiante = request.user.estudiante,
             finalizado=True
         ).exists()
+    #ultimos ejercicios estudiante
+    # ultimos = Intento.objects.filter(estudiante=estudiante).select_related('ejercicio').order_by('-fecha_intento')[:10]
+    
+        
+        
+    # if hasattr(request.user,'docente'):
+    #     estudiantes = Estudiante.objects.filter(
+    #         docente = request.user.docente,
+    #         
+    #     ).exists()    
+        
         
     context = {
         'diagnostico_completado': diagnostico_completado

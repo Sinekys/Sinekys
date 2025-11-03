@@ -1,0 +1,70 @@
+{% load static %}
+
+{% block title %}SINEKYS{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>SINEKYS</title>
+  <style>
+    {% comment %} * { 
+      box-sizing: border-box;
+      border: 1px solid red;
+    } {% endcomment %}
+  </style>
+</head>
+<body>
+  <div class="exit-button">
+      <a href="{% url 'mainPage' %}"><- Salir  </a>
+  </div>
+  <header>
+    
+  </header>
+
+<main>
+ 
+    <div class="main-container">
+<div class="exercise">
+  <p id="enunciado">{{ contexto.display_text }}</p>
+  
+</div>
+
+    <input type="hidden" id="ejercicio-id" value="{{ ejercicio.id}}">
+    <div class="panels">
+      <div class="left-panel">        
+        <div class="steps-box">
+          <div class="inputs"  id="steps-container" >
+            <input type="text" name="step[]" class="step-input" placeholder="Empieza aquí ^^" autofocus />
+          </div>
+        </div>
+        <div class="button-row">
+          <button type="button" id="add-step-btn">+ Agregar paso</button>
+          <button type="button" id="remove-step-btn" style="background-color:#551111;">− Quitar paso</button>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="hint-box">
+          <button class="hint-button" type="button">¿Pista?</button>
+          <div class="hint-text">
+            <p>{{ contexto.hint }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+  <footer>
+    <button class="finalize-btn" id="finalize-btn" type="button">Terminar</button>
+  </footer>
+</body>
+</html>
+</style>
+{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/diagnostico.css' %}">
+    <script type="module" src="{% static 'js/diagnostico/main.js' %}"></script>
+{% endblock %}
