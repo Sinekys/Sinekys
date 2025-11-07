@@ -22,8 +22,6 @@ from accounts.models import Estudiante, Diagnostico
 
 # services
 from ejercicios.services import actualizar_diagnostico, seleccionar_siguiente_ejercicio
-from accounts.services import obtener_o_validar_diagnostico, diagnostico_activo
-
 # logs
 import logging
 logger = logging.getLogger(__name__)
@@ -36,8 +34,8 @@ from .mixins import (
     crear_intento_servidor,
     # render_diagnostico_template,
     json_next_excercise_response,    
-    DiagnosticoCompletadoMixin
-
+    DiagnosticoCompletadoMixin,
+    select_mode,
 )
 
 
@@ -77,15 +75,14 @@ def evaluar_respuesta(respuesta_estudiante: str, respuesta_correcta: str) -> tup
 
 @method_decorator(login_required, name='dispatch')
 class DiagnosticTestView(View):
-
     def get(self, request):
-        # accept = request.headers.get('Accept','')
+        post_url = reverse('diagnostico')
         wants_json = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         estudiante, err_resp = get_estudiante_from_request(request)
         if err_resp:
             return err_resp
 
-        payload, err = prepare_next_payload_diagnostico(estudiante, wants_json=request.is_ajax())
+        payload, err = prepare_next_payload_diagnostico(estudiante, wants_json=wants_json)
         if err:
             return err
 
@@ -93,24 +90,23 @@ class DiagnosticTestView(View):
         if payload.get("finalizado"):
             return render(request, "diagnostico/finalizado.html",payload)
 
-
         if wants_json:
-            ejercicio = payload["ejercicio"]
-            contexto = payload["contexto"]
             return JsonResponse({
                 "ejercicio": {
-                    "id": ejercicio.id,
-                    "enunciado": ejercicio.enunciado,
-                    "dificultad": float(ejercicio.dificultad)
+                    "id": payload["ejercicio"].id,
+                    "enunciado": payload["ejercicio"].enunciado,
+                    "dificultad": float(payload["ejercicio"].dificultad)
                 },
-                "contexto": contexto
+                "contexto": payload["contexto"],
+                "post_url": post_url
             })
         else:
             return render(request, "diagnostico/index.html", {
                 "ejercicio": payload["ejercicio"],
                 "contexto": payload["contexto"],
                 "diagnostico": payload["diagnostico"],
-                "remaining_seconds": payload["remaining_seconds"]
+                "remaining_seconds": payload["remaining_seconds"],
+                "post_url": post_url
             })
             
 
@@ -118,8 +114,10 @@ class DiagnosticTestView(View):
     @transaction.atomic
     def post(self, request):
         # necesito obtener los pasos y la respuesta del estudiante
-        if request.content_type != "application/json":
-            return JsonResponse({"error": "Se esparaba json"}, 400)
+        # aceptar application/json con o sin charset
+        ct = request.content_type or ""
+        if not ct.startswith("application/json"):
+            return JsonResponse({"error": "Se esperaba application/json"}, status=400)
         estudiante, err_resp = get_estudiante_from_request(request)
         
         if err_resp:
@@ -227,16 +225,8 @@ class DiagnosticTestView(View):
                 "error": se
             })
             
-        # contexto = contextualize_exercise_diagnostico(siguiente_ejercicio)
-        try:
-            from .requestdiagnostico import contextualize_exercise_diagnostico
-            contexto = contextualize_exercise_diagnostico(siguiente_ejercicio)
-        except Exception:
-            contexto = {
-                "display_text": siguiente_ejercicio.enunciado,
-                "hint": "hint"
-            }
-            
+        contexto = select_mode(estudiante,siguiente_ejercicio,"diagnostico")
+        
         return json_next_excercise_response(siguiente_ejercicio,contexto,theta=theta_actual,se=se,num_items=num_items)
         
         

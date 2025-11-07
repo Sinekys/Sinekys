@@ -1,14 +1,13 @@
 from django.shortcuts import render
 from django.contrib import messages
-# from django.contrib.auth.mixins import LoginRequiredMixin
 from accounts.models import Diagnostico, Estudiante
-from .models import Ejercicio,Intento,IntentoPaso
+from .models import Intento,IntentoPaso
 from accounts.services import diagnostico_finalizado
-from django.db import transaction
+# from django.db import transaction
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest 
-
-
+# from django.urls import reverse
+# import json
 from typing import Tuple, Optional, Dict, Any
 
 
@@ -17,28 +16,30 @@ logger = logging.getLogger(__name__)
 
 try:
     from ejercicios.services import seleccionar_siguiente_ejercicio
-except ImportError:
-    # fallback
+except ImportError as e:
+    logger.error("Error al importar servicios: %s", str(e))
     def seleccionar_siguiente_ejercicio(estudiante):
         from ejercicios.models import Ejercicio
         logger.warning("--ERROR-- Usando selección aleatoria | Fallo en importación")
         return Ejercicio.objects.order_by('?').first()
 try:
-    from .requestdiagnostico import contextualize_exercise_diagnostico
-except ImportError:
+    from .Api_LLMs.requestdiagnostico  import contextualize_exercise_diagnostico
+except ImportError as e:
+    logger.error("Error al importar request: %s", str(e))
     def contextualize_exercise_diagnostico(ejercicio):
         logger.warning("Módulo requestdiagnostico no disponible | Usando contexto por defecto")
         return {"display_text":ejercicio.enunciado, "hint": "Contexto no disponible"}        
 
 try: 
-    from ..request import contextualize_exercise
-except ImportError:
+    from .Api_LLMs.request import contextualize_exercise
+except ImportError as e:
+    logger.error("Error al importar request: %s", str(e))
     def contextualize_exercise(ejercicio,carrera=None):
         logger.warning('Módulo request no disponible | Usando contexto por defecto')
         return {"display_text": ejercicio.enunciado, "hint": f'Contexto para {carrera or "General"} no disponible'}
     
 
-
+# Esta la usaré más adelante
 def get_type_of_user(request):
     try:
         estudiante = request.user.estudiante
@@ -50,8 +51,7 @@ def get_type_of_user(request):
 def get_estudiante_from_request(request) -> Tuple[Optional[Estudiante], Optional[JsonResponse]]:
     # Devuelve (estudiante,error_response) este ultimo es None si todo está bien
     try:
-        estudiante = request.user.estudiante
-        return estudiante,None
+        return request.user.estudiante,None
     except Exception:
         return None, HttpResponseBadRequest("Usuario no encontrado")
     
@@ -99,7 +99,6 @@ def prepare_next_payload_diagnostico(estudiante, wants_json:bool = False) -> Tup
     else:
         diagnostico = obtener_o_validar_diagnostico(estudiante)
         if diagnostico.finalizado or diagnostico.is_expired():
-            # devolver payload
             return {
                 "finalizado": True,
                 "diagnostico": diagnostico,
@@ -111,7 +110,12 @@ def prepare_next_payload_diagnostico(estudiante, wants_json:bool = False) -> Tup
         diagnostico.finalizado = True
         diagnostico.save(update_fields=['finalizado'])
         if wants_json:
-            return None, JsonResponse({"error": "No hay más ejercicios disponibles", "finalizado": True}, status=200)
+            return None , JsonResponse({
+                "succes": False,
+                "final": True,
+                "error": "No hay más ejercicios disponibles",
+                "motivo": "No hay más ejercicios disponibles",
+            }, status=200)
         return {
             "finalizado": True,
             "diagnostico": diagnostico,

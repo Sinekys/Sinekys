@@ -4,6 +4,16 @@ import { bindStepButtons, updateTimeDisplay, resetStepsContainer } from './ui-co
 
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.getElementById('diagnostico-root');
+
+  if (!root) {
+    console.error('diagnostico-root element not found');
+    return;
+  }
+
+  const postUrl = root.dataset.postUrl || '/ejercicio/diagnostico/';
+  const remainingFromServer = parseInt(root.dataset.remainingSeconds || '0', 10);
+
+  // const durationDefault = parseInt(root.dataset.duration || '3540', 10); // 59 min
   const timeElement = document.querySelector('.time');
   const enunciadoElement = document.getElementById('enunciado');
   const stepsContainer = document.getElementById('steps-container');
@@ -12,76 +22,60 @@ document.addEventListener('DOMContentLoaded', () => {
   const finalizeBtn = document.getElementById('finalize-btn');
   const ejercicioIdInput = document.getElementById('ejercicio-id');
 
-  bindStepButtons({ addBtn: addStepBtn, removeBtn: removeStepBtn, stepsContainer });
+  bindStepButtons({addBtn: addStepBtn, removeBtn: removeStepBtn, stepsContainer});
 
-  // leer segundos restantes enviados por el servidor (data-remaining-seconds -> dataset.remainingSeconds)
-  const remainingFromServer = parseInt(root.dataset.remainingSeconds || '0', 10);
   let timer = null;
 
-  function startTimerFromPageLoad() {
-    if (isNaN(remainingFromServer) || remainingFromServer < 0) {
-      console.error("Error: tiempo restante inválido en data-remaining-seconds.");
-      window.location.href = '/';
-      return;
-    }
-
-    if (remainingFromServer === 0) {
-      // Si ya está vencido al cargar la página
-      handleTimeUp();
-      return;
-    }
-
+  function startTimerFromRemaining(remainingSeconds) {
+    if (timer) timer.stop();
     timer = new CountdownTimer({
-      remainingSeconds: remainingFromServer,
+      remainingSeconds: remainingSeconds,
       onTick: (remaining) => updateTimeDisplay(timeElement, remaining),
       onFinish: () => handleTimeUp()
     });
     timer.start();
   }
 
-  function handleTimeUp() {
-    try {
-      alert('Tiempo agotado. Se finalizará el diagnóstico.');
-    } finally {
-      window.location.href = '/';
-    }
+
+  async function handleTimeUp() {
+    alert('Tiempo agotado. Se finalizará el diagnóstico.');
+    window.location.href = '/';
   }
 
   async function enviarRespuesta() {
-    finalizeBtn.disabled = true;
-    let pasos;
-    try {
-      pasos = Array.from(stepsContainer.getElementsByClassName('step-input'))
-        .map(el => el.value.trim())
-        .filter(v => v);
+    finalizeBtn.disabled= true;
+    try{
+      console.log("POST URL:", postUrl);
+      const ejercicioId = ejercicioIdInput.value;
+      const pasos = Array.from(stepsContainer.getElementsByClassName('step-input'))
+                        .map(el => el.value.trim())
+                        .filter(v => v);
       if (pasos.length === 0) {
         alert('Completa al menos un paso.');
         return;
       }
-    } finally {
-      finalizeBtn.disabled = false;
-    }
-
-    // valor público y fiable desde el timer del cliente (indicativo)
-    const remainingClient = timer ? timer.getRemainingSeconds() : 0;
+    
+// Si está actualizadoooo por que me sigue dando erroroorrr
+    const remaining = timer ? timer.getRemainingSeconds() : 0;
 
     const payload = {
-      ejercicio_id: parseInt(ejercicioIdInput.value, 10),
+      ejercicio_id: parseInt(ejercicioId, 10),
       respuesta_estudiante: pasos[pasos.length - 1],
-      tiempo_en_segundos: remainingClient,   // compatibilidad legacy
-      remaining_seconds: remainingClient,    // campo explícito interpretado por backend
+      tiempo_en_segundos: remaining,
+      remaining_seconds: remaining, // backend lo espera
       pasos: pasos
     };
 
-    try {
-      const data = await submitAnswer(payload);
-      if (data.success && !data.final) {
+    const data = await submitAnswer(payload, postUrl);
+    if (data.success && !data.final) {
         resetStepsContainer(stepsContainer);
+        // Actualizar enunciado con la respuesta del backend
         if (data.contexto?.display_text) {
           enunciadoElement.textContent = data.contexto.display_text;
+
           const hintP = document.querySelector('.hint-text p');
           if (hintP) hintP.textContent = data.contexto.hint || '';
-          ejercicioIdInput.value = data.ejercicio.id;
+          if (data.ejercicio?.id) ejercicioIdInput.value = data.ejercicio.id;
         }
       } else {
         alert(data.motivo || 'Diagnóstico finalizado.');
@@ -90,10 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.error('submitAnswer error', e);
       alert('No se pudo enviar la respuesta.');
-    }
+  } finally{
+      finalizeBtn.disabled = false;
   }
+}
 
-  finalizeBtn.addEventListener('click', enviarRespuesta);
+finalizeBtn.addEventListener('click', enviarRespuesta);
 
-  startTimerFromPageLoad();
+  startTimerFromRemaining(remainingFromServer);
 });

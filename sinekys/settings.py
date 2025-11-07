@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    'corsheaders',
     'django.contrib.sites', 
 # Sinekys Apps
     'accounts',
@@ -68,6 +68,7 @@ INSTALLED_APPS = [
 SITE_ID = 1
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -81,8 +82,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'sinekys.urls'
 
-
-
+# Solo para desarrollo | permite todas las solicitudes
+CORS_ORIGIN_ALLOW_ALL = True
+# en producción especificar dominios
+# CORS_ORIGIN_WHITELIST = ['https://sinekys.com'] | ejemplo
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

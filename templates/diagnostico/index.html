@@ -25,6 +25,7 @@
 
 <main>
   <div id="diagnostico-root"
+       data-post-url="{{ post_url }}"
        data-duracion="{{diagnostico.duracion_segundos}}"           
        data-diagnostico-id="{{ diagnostico.id }}"
        data-fecha-inicio="{{ diagnostico.fecha_inicio|date:'c' }}"
@@ -70,7 +71,7 @@
   </footer>
 </body>
 </html>
-</style>
+
 {% endblock %}
 
 {% block extra_head %}
