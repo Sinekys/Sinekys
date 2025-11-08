@@ -1,3 +1,4 @@
+import unicodedata
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
@@ -8,8 +9,13 @@ class Carrera(models.Model):
     semestres = models.IntegerField(verbose_name=_("Semestres"), null= True, blank=True) 
     descripcion = models.TextField(blank=True, null=True, verbose_name=_("Descripción"))
     
+    def save(self, *args, **kwargs):
+        # Corregir codificación al guardar
+        if self.nombre:
+            self.nombre = unicodedata.normalize('NFKC', self.nombre.strip())
+        super().save(*args, **kwargs)
     def __str__(self):
-        return self.nombre
+        return unicodedata.normalize('NFKC', self.nombre)
     
 class Materia(models.Model):
     nombre = models.CharField(max_length=100, verbose_name=_("Materia Name"))

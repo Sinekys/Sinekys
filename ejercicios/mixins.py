@@ -65,24 +65,35 @@ def diagnostico_activo_para_api(estudiante):
     from accounts.services import diagnostico_activo
     return diagnostico_activo(estudiante)
 
-
+#Es muy probable que vuelva a modificar esta función, pero por ahora queda así
+# Seleccionad entre modos: diagnostico, ejercicio (solo) y me falta en grupo
 def select_mode(estudiante,ejercicio, modo: str ):
     try:
         if modo == "diagnostico":
             return contextualize_exercise_diagnostico(ejercicio)
+        if not estudiante:
+            raise ValueError("Se requiere ser estudiante en modo normal")
+        # obtener un string representativo de la carrera, preferir un campo explícito
+        carrera_obj = getattr(estudiante, "carrera", None)
+
+        if carrera_obj is None:
+            carrera_str = "General"
         else:
-            if not estudiante:
-                raise ValueError("Se requiere ser estudiante en modo normal")
-            carrera = getattr(estudiante, "carrera", "General")
-            if not carrera:
-                carrera = "General"        
-            return contextualize_exercise(ejercicio, estudiante.carrera)
+            # preferir un campo 'nombre' o 'slug' si existe; fallback a str()
+            carrera_str = getattr(carrera_obj, "nombre", None) or getattr(carrera_obj, "slug", None) or str(carrera_obj)
+            # sanitizar y asegurar tipo str
+            if not isinstance(carrera_str, str):
+                carrera_str = str(carrera_str)
+            carrera_str = carrera_str.strip() or "General"
+        # llamar la función que espera una cadena
+        return contextualize_exercise(ejercicio, carrera_str)
+
     except Exception as e:
         logger.exception("Error al generar contexto para ejercicio %s en modo %s: %s", 
-                        ejercicio.id, modo, str(e))
+                         getattr(ejercicio, "id", "?"), modo, str(e))
         return {
             "display_text": ejercicio.enunciado,
-            "hint": "Contexto no disponbile actualmente"
+            "hint": "Contexto no disponible actualmente"
         }
 
 
