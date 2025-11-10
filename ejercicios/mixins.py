@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib import messages
 from accounts.models import Diagnostico, Estudiante
+from ejercicios.utils.text import normalize_text
 from .models import Intento,IntentoPaso
 from accounts.services import diagnostico_finalizado
 # from django.db import transaction
@@ -80,12 +81,10 @@ def select_mode(estudiante,ejercicio, modo: str ):
             carrera_str = "General"
         else:
             # preferir un campo 'nombre' o 'slug' si existe; fallback a str()
-            carrera_str = getattr(carrera_obj, "nombre", None) or getattr(carrera_obj, "slug", None) or str(carrera_obj)
-            # sanitizar y asegurar tipo str
-            if not isinstance(carrera_str, str):
-                carrera_str = str(carrera_str)
-            carrera_str = carrera_str.strip() or "General"
-        # llamar la función que espera una cadena
+            carrera_str = getattr(carrera_obj, "nombre", None) or str(carrera_obj)
+            carrera_str = normalize_text(carrera_str, for_storage=True)
+        logger.info("Seleccionando modo %s para estudiante %s en carrera %s",
+                    modo, estudiante.user.username, carrera_str)
         return contextualize_exercise(ejercicio, carrera_str)
 
     except Exception as e:

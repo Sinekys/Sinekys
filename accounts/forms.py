@@ -3,6 +3,7 @@
 from django import forms
 from django.apps import apps
 from django.utils.translation import gettext_lazy as _
+from ejercicios.utils.text import normalize_text
 
 class CustomSignupForm(forms.Form):
     first_name = forms.CharField(
@@ -25,6 +26,10 @@ class CustomSignupForm(forms.Form):
         super().__init__(*args, **kwargs)
         Carrera = apps.get_model('core', 'Carrera')
         self.fields['career'].queryset = Carrera.objects.all()
+        
+        self.fields['career'].choices = [
+            (c.id, normalize_text(c.nombre)) for c in Carrera.objects.all()
+        ]
 
     def signup(self, request, user):
         # 1) Guardar datos en el User

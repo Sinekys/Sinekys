@@ -167,10 +167,6 @@ class DiagnosticTestView(View):
             return JsonResponse({"success": True, "final":True,"motivo":"Tiempo agotado antes del envío"}, status=200)
         
         
-        # Crwar intento
-        intento = crear_intento_servidor(estudiante,ejercicio, respuesta_estudiante,es_correcto,pasos,diagnostico)
-        # intento al parecer tampoco esta siendo utilizado
-        
         # actualizar dianostico y obtener theta + SE
         theta_actual, se = actualizar_diagnostico(estudiante)
         
@@ -248,7 +244,7 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
         
         payload, err_resp = prepare_next_payload_normal(estudiante)
         if err_resp:
-            messages.error(request, err_resp) # era así?
+            messages.error(request, err_resp)
             return redirect('home')
         
         

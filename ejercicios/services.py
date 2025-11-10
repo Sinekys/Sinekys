@@ -7,6 +7,7 @@
     # Si el código calcula, decide, filtra, transforma datos, sí va en services.py. 
 
 import logging
+from random import random
 
 import numpy as np
 from scipy.optimize import minimize
@@ -160,9 +161,28 @@ def seleccionar_siguiente_ejercicio(estudiante):
     info_arr = p * (1.0 - p)  # 1PL: a=1
 
     # elegir el índice con máxima información
-    max_idx = int(np.argmax(info_arr))
+    try: 
+        max_info = float(np.max(info_arr))
+        candidates = np.where(np.isclose(info_arr, max_info, atol=1e-12))[0]
+        if len(candidates) > 1:
+            logger.info("Múltiples candidatos con info máxima para estudiante %s: theta=%.4f, max_info=%.6f, n_candidates=%d", getattr(estudiante, 'pk', '?'), theta, max_info, len(candidates))
+            max_idx = int(np.random.choice(candidates))
+        else: 
+            max_idx = int(np.argmax(info_arr))
+    except Exception as e:
+        logger.exception("Error seleccionando siguiente ejercicio para estudiante %s: %s", getattr(estudiante, 'pk', '?'), e)
+        return random.choice(disponibles)
+    
     mejor_item = disponibles[max_idx]
-
+    if mejor_item.id in ids_respondidos:
+        logger.error("Error lógico: se seleccionó un ejercicio ya respondido para estudiante %s: ejercicio_id=%s", getattr(estudiante, 'pk', '?'), mejor_item.id)
+        for item in disponibles:
+            if item.id not in ids_respondidos:
+                logger.info("Seleccionando ejercicio no respondido alternativo para estudiante %s: ejercicio_id=%s", getattr(estudiante, 'pk', '?'), item.id)
+                return item
+            else:
+                mejor_item = random.choice(disponibles)
+                logger.info("Seleccionando ejercicio aleatorio para estudiante %s: ejercicio_id=%s", getattr(estudiante, 'pk', '?'), mejor_item.id)
     return mejor_item
 
 
