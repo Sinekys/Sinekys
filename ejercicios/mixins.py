@@ -4,12 +4,12 @@ from accounts.models import Diagnostico, Estudiante
 from ejercicios.utils.text import normalize_text
 from .models import Intento,IntentoPaso
 from accounts.services import diagnostico_finalizado
-# from django.db import transaction
+from django.db import transaction
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest 
 # from django.urls import reverse
 # import json
-from typing import Tuple, Optional, Dict, Any
+from typing import Tuple, Optional, Dict, Any, List
 
 
 import logging
@@ -169,34 +169,100 @@ def prepare_next_payload_normal(estudiante) -> Tuple[Optional[Dict[str,Any]], Op
 
 
 
-def crear_intento_servidor(estudiante, ejercicio,respuesta_estudiante:str, es_correcto: bool, pasos: list, diagnostico: Diagnostico):
+def crear_intento_servidor(estudiante, ejercicio,respuesta_estudiante:str, es_correcto: bool, pasos: List[str], diagnostico=None, tiempo_inicio=None,tiempo_fin=None):
     # Crear intento e intento paso usando el tiempo calculado por el servidor
     # devuelve el intento creado
-    
-    server_remaining = diagnostico.tiempo_restante()
-    server_remaining_clamped = max(0.0, float(server_remaining))
-    tiempo_usado_server = float(diagnostico.duracion_segundos) - server_remaining_clamped
-    
-    if tiempo_usado_server < 0: 
-        tiempo_usado_server = 0.0
+    logger.debug("crear_intento_servidor() — inicio — estudiante=%s ejercicio=%s", getattr(estudiante, 'pk', '?'), getattr(ejercicio, 'id', '?'))
 
-    intento = Intento.objects.create(
-        estudiante=estudiante,
-        ejercicio=ejercicio,
-        respuesta_estudiante=respuesta_estudiante,
-        es_correcto=es_correcto,
-        puntos=1.0 if es_correcto else 0.0,
-        tiempo_en_segundos=tiempo_usado_server,
-        fecha_intento=timezone.now()
-    )
+    if tiempo_fin is None: 
+        tiempo_fin = timezone.now()
     
-    for orden, paso_texto in enumerate(pasos or [], start=1):
-        IntentoPaso.objects.create(
-            intento=intento,
-            orden=orden,
-            contenido=paso_texto,
-            datos_aux={}
+    tiempo_en_segundos = 0.0
+    if diagnostico:
+        try:
+            server_remaining = diagnostico.tiempo_restante()
+            server_remaining_clamped = max(0.0, float(server_remaining))
+            tiempo_en_segundos = float(diagnostico.duracion_segundos) - server_remaining_clamped
+        except Exception as e:
+            logger.error(
+                "Error al calcular tiempo_en_segundos desde diagnostico para estudiante %s y ejercicio %s: %s",
+                estudiante.pk, ejercicio.id, str(e)
+            )
+            tiempo_en_segundos = 0.0
+    elif tiempo_inicio:
+        try:
+            if isinstance(tiempo_inicio,str):
+                tiempo_inicio = timezone.datetime.fromisoformat(tiempo_inicio)
+            if timezone.is_naive(tiempo_inicio):
+                tiempo_inicio = timezone.make_aware(tiempo_inicio, timezone.get_current_timezone())
+            tiempo_en_segundos = (tiempo_fin - tiempo_inicio).total_seconds()
+            tiempo_en_segundos = max(0.0, tiempo_en_segundos)
+        except Exception as e:
+            logger.error(
+                "Error al calcular tiempo_en_segundos para estudiante %s y ejercicio %s: %s",
+                estudiante.pk, ejercicio.id, str(e)
+            )
+            tiempo_en_segundos = 0.0
+    respuesta_norm = (respuesta_estudiante or "")[:150].strip()  # limitar a max length
+    if not respuesta_norm and pasos:
+        last = None
+        for p in reversed(pasos):
+            if p and str(p).strip():
+                last = str(p).strip()
+                break
+            respuesta_norm = last or "Sin respuesta"
+            
+    intento = None
+    try:  
+        with transaction.atomic():
+            intento = Intento.objects.create(
+                estudiante=estudiante,
+                ejercicio=ejercicio,
+                respuesta_estudiante=respuesta_norm, #limitar a max length
+                es_correcto=es_correcto,
+                puntos=1.0 if es_correcto else 0.0,
+                tiempo_en_segundos=tiempo_en_segundos,
+                fecha_intento=tiempo_fin
+            )
+            intento.save()
+            logger.info("Intento %s creado para estudiante %s en ejercicio %s", intento.id, estudiante.pk, ejercicio.id)
+        
+            for orden, paso_texto in enumerate(pasos or [], start=1):
+                try:
+                    IntentoPaso.objects.create(
+                        intento=intento,
+                        orden=orden,
+                        contenido=paso_texto,
+                        datos_aux={}
+                    )
+                    logger.info("  Paso %s creado para intento %s", orden, intento.id)
+                except Exception as e:
+                    logger.error(
+                        "Error al crear intento o pasos para estudiante %s en ejercicio %s: %s",
+                        estudiante.pk, ejercicio.id, str(e)
+                    )
+    except Exception as e:
+        logger.error(
+            "Error al crear intento para estudiante %s en ejercicio %s: %s",
+            estudiante.pk, ejercicio.id, str(e)
         )
+        try:
+            q = Intento.objects.filter(
+                estudiante=estudiante,
+                ejercicio=ejercicio,
+                respuesta_estudiante=(respuesta_estudiante or "")[:150],
+            ).order_by('-fecha_intento')
+            intento = q.first()
+            if intento:
+                logger.info("Recuperado intento existente %s para estudiante %s en ejercicio %s tras error en creación", intento.id, estudiante.pk, ejercicio.id)
+                return intento
+        except Exception as e2:
+            logger.error(
+                "Error al recuperar intento existente para estudiante %s en ejercicio %s: %s",
+                estudiante.pk, ejercicio.id, str(e2)
+            )
+            intento = None
+            return None
     return intento
 
 # Helpers de respuesta

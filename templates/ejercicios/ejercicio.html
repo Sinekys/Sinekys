@@ -24,7 +24,10 @@
   </header>
 
 <main>
- 
+  <div id="ejercicio-root"
+        data-post-url="{% url 'ejercicio' %}"
+        data-mode="normal"
+  >
     <div class="main-container">
 <div class="exercise">
   <p id="enunciado">{{ contexto.display_text }}</p>
@@ -66,5 +69,5 @@
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/diagnostico.css' %}">
-    <script type="module" src="{% static 'js/diagnostico/main.js' %}"></script>
+    <script type="module" src="{% static 'js/ejercicio/main.js' %}"></script>
 {% endblock %}

@@ -171,3 +171,5 @@ def contextualize_exercise(ejercicio, carrera):
          
 # Ok, hasta el momento tengo 2 errores, el primero es que siempre me da el mismo ejercicio | Error solucionado Error solucionado Error solucionado Error solucionado
 # El segundo es que no me da un contexto apropiado | Pendiente
+
+# librería

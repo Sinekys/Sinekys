@@ -191,3 +191,5 @@ def seleccionar_siguiente_ejercicio(estudiante):
 # Necesito automatizar pruebas 
 # para ver como se van ajustando los parámetros de theta y SE
 # Ver si lo ejercicios se toman como buenos o no y bajo qué parámetros
+
+# 0.4

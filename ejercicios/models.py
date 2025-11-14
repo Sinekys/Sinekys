@@ -128,7 +128,7 @@ class Intento(AbstractResultado,AbstractTiempo):
     ejercicio = models.ForeignKey(Ejercicio, verbose_name="ejercicio", on_delete=models.CASCADE)
     # Campos
     respuesta_estudiante = models.CharField(max_length=150,verbose_name="respuesta estudiante")
-
+    
     
     def __str__(self):
         return self.respuesta_estudiante

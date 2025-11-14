@@ -140,39 +140,49 @@ class DiagnosticTestView(View):
         respuesta_estudiante = (data.get("respuesta_estudiante") or "").strip()
         pasos = data.get("pasos",[])
 
+        client_remaining = data.get("remaining_seconds")
+        
         if not ejercicio_id:
             return JsonResponse({"error":"Falta id del ejercicio"}, status=400)
         
         ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
         es_correcto, puntos = evaluar_respuesta(respuesta_estudiante, ejercicio.solucion)
-        # ojo, la variable puntos no se está utilizando
-        client_remaining = None
-        try:
-            client_remaining = float(data.get("remaining_seconds")) if data.get("remaining_seconds") is not None else None
-        except Exception:
-            client_remaining = None
         
-        server_remaining = diagnostico.tiempo_restante()
-        server_remaining_clamped = max(0.0, float(server_remaining))
-        if client_remaining is not None and abs(client_remaining - server_remaining_clamped) > 5:
-            logger.warning(
-                "Client-reported remaining (%s) differs from server (%s) for diagnostico %s / estudiante %s",
-                client_remaining, server_remaining_clamped, diagnostico.id, estudiante.pk
-            )
-            
+        server_remaining = max(0.0, float(diagnostico.tiempo_restante()))
+        client_remaining_float = None
+        if client_remaining is not None:
+            try:
+                client_remaining_float = float(client_remaining)
+                if abs(client_remaining_float - server_remaining) > 5:
+                    logger.warning(
+                        "Client-reported remaining (%s) differs from server (%s) for diagnostico %s / estudiante %s",
+                        client_remaining_float, server_remaining, diagnostico.id, estudiante.pk
+                    )
+            except (TypeError, ValueError):
+                pass
     #    comprobación extra por si expiró entre peticiones
         if diagnostico.is_expired():
             diagnostico.finalizado = True
             diagnostico.save(update_fields=["finalizado"])
             return JsonResponse({"success": True, "final":True,"motivo":"Tiempo agotado antes del envío"}, status=200)
         
+        intento = crear_intento_servidor(
+            estudiante= estudiante,
+            ejercicio=ejercicio,
+            respuesta_estudiante=respuesta_estudiante,
+            es_correcto=es_correcto,
+            pasos=pasos,
+            diagnostico=diagnostico)
+        logger.info(
+            "Intento creado (ejercicios.view - diagnostico) intento_id=%s  estudiante=%s ejercicio=%s puntos=%s es_correcto=%s",
+            intento.id,estudiante.pk,ejercicio.id,puntos,es_correcto
+        )
         
         # actualizar dianostico y obtener theta + SE
         theta_actual, se = actualizar_diagnostico(estudiante)
-        
         # actualizar el objeto Diagnostico con los nuevos valores
         diagnostico.theta = theta_actual
-        diagnostico.error_estimacion = se #esto debería venir desde services.py
+        diagnostico.error_estimacion = se
         diagnostico.save(update_fields=["theta","error_estimacion"])
         
         # criterios de finalizacion
@@ -205,10 +215,7 @@ class DiagnosticTestView(View):
                 "error": se
             })
         
-             
         siguiente_ejercicio = seleccionar_siguiente_ejercicio(estudiante)
-        
-        
         if not siguiente_ejercicio:
             # Caso extremo: no hay más ejercicios
             diagnostico.finalizado = True
@@ -235,8 +242,9 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     def get(self, request, ejercicio_id= None):
         if ejercicio_id:            
             ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
+            request. session[f"tiempo_inicio_ejercicio_{ejercicio.id}"] = timezone.now().isoformat()
             contexto = {"display_text": ejercicio.enunciado, "hint":""}
-            return render(request, "ejercicio/ejercicio.html", {"ejercicio": ejercicio, "contexto":contexto})
+            return render(request, "ejercicio/ejercicio.html", {"ejercicio": ejercicio, "contexto":contexto,"ejercicio_id":ejercicio.id})
         # fallback
         estudiante, err = get_estudiante_from_request(request)
         if err:
@@ -251,12 +259,15 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
         ejercicio = payload["ejercicio"]
         contexto = payload["contexto"]
         
+        # Tiempo en contestar
+        request.session[f"tiempo_inicio_ejercicio_{ejercicio.id}"] = timezone.now().isoformat()
+        
         return render(request, "ejercicios/ejercicio.html", {
             "ejercicio": ejercicio,
             "contexto": contexto,
-            # "diagnostico": diagnostico,
-            # "remaining_seconds": remaining_seconds
+            "ejercicio_id": ejercicio.id,
         })
+    @transaction.atomic        
     def post(self, request):
         ct = request.content_type or ""
         if not ct.startswith("application/json"):
@@ -265,15 +276,16 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
         estudiante, err = get_estudiante_from_request(request)
         if err:
             return err
-        
+    
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({"error":"Json Inválido"}, status =400)
         
         ejercicio_id = data.get("ejercicio_id")
-        respuesta = (data.get("respuesta") or "").strip()#???
+        respuesta = (data.get("respuesta") or "").strip()
         pasos = data.get("pasos", [])
+        
         
         if not ejercicio_id:
             return JsonResponse({"error":"falta id del ejercicio"}, status= 400)
@@ -281,37 +293,55 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
         ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
         es_correcto, puntos = evaluar_respuesta(respuesta, ejercicio.solucion)
         
-        intento = crear_intento_servidor(estudiante,ejercicio,respuesta,es_correcto,pasos)
+        tiempo_inicio_iso = request.session.get(f"tiempo_inicio_ejercicio_{ejercicio.id}")
+        tiempo_inicio = None
+        tiempo_fin = timezone.now()
+        
+        # tiempo_en_segundos = 0.0
+        if tiempo_inicio_iso:
+            try:
+                tiempo_inicio = timezone.datetime.fromisoformat(tiempo_inicio_iso)
+                if timezone.is_naive(tiempo_inicio):
+                    tiempo_inicio = timezone.make_aware(tiempo_inicio, timezone.get_current_timezone())
+            except Exception as e:
+                logger.warning(
+                    "Error al calcular tiempo_en_segundos para estudiante %s y ejercicio %s: %s",
+                    estudiante.pk, ejercicio.id, str(e)
+                )
+        
+        intento = crear_intento_servidor(
+            estudiante=estudiante,
+            ejercicio=ejercicio,
+            respuesta_estudiante=respuesta,
+            es_correcto=es_correcto,
+            pasos=pasos,
+            tiempo_inicio=tiempo_inicio,
+            tiempo_fin=tiempo_fin)
+        
+        if not intento:
+            logger.error("Error al crear intento para estudiante %s en ejercicio %s", estudiante.pk, ejercicio.id)
+            return JsonResponse({"error":"Error interno al crear el intento"}, status=500)
+    
+        request.session.pop(f"tiempo_inicio_ejercicio_{ejercicio.id}", None)
         
         logger.info(
             "Intento creado (ejercicios.view)_ intento_id=%s  estudiante=%s ejercicio=%s puntos=%s es_correcto=%s",
             intento.id,estudiante.pk,ejercicio.id,puntos,es_correcto
         )
-        
-        #Respuesta AJAX (fetch), devolver_intento_id para que el cliente rendirice el resultado
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.GET.get("json")
+        redirect_url = reverse("check-respuesta", kwargs={"intento_id": intento.id})
         if is_ajax:
             return JsonResponse({
                 "success": True,
                 "intento_id": intento.id,
                 "es_correcto": es_correcto,
-                "puntos": puntos
+                "puntos": puntos,
+                "redirect_url": redirect_url
             })
-            
-            
-        # redirigir feedback
-        try:
-            url = reverse("check-respuesta", kwargs={"intento_id":intento.id})
-        except Exception:
-            logger.warning("No existe la URL 'check-respuesta' para redirigir, Devolviendo JSON...")
-            return JsonResponse({
-                "success": True,
-                "intento_id": intento.id,
-                "es_correcto": es_correcto,
-                "puntos":puntos
-            })
-            
-        return redirect(url)
+
+        return redirect(redirect_url)
+                
+        # return redirect(url)
 class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     def get(self,request):
         
@@ -327,6 +357,7 @@ class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     
     
     # GET /ejercicios/check/<int:intento_id>/
+
 @method_decorator(login_required, name='dispatch')
 class CheckAnswer(View):
     def get(self,request, intento_id):
@@ -341,20 +372,17 @@ class CheckAnswer(View):
         
         ejercicio = intento.ejercicio
         
-        # esto ya se hace al crear el intento, pero es bueno revalidarlo para seguridad y consistencia
-        es_correcto = (normalizar_respuesta(intento.respuesta_estudiante) == normalizar_respuesta(ejercicio.solucion))
-        puntos = 1.0 if es_correcto else 0.0
+        es_correcto, puntos = evaluar_respuesta(intento.respuesta_estudiante, ejercicio.solucion)
+
+        pasos_intento = list(intento.pasos.all().order_by('orden'))
         
-        pasos_intento = list(intento.pasos.all())
         pasos_correctos_qs = PasoEjercicio.objects.filter(ejercicio=ejercicio).order_by("orden")
         pasos_correctos = list(pasos_correctos_qs)
         
         feedback = Feedback.objects.filter(intento = intento).order_by("-fecha_feedback").first()
         feedback_pasos = []
         if feedback:
-            feedback_pasos = list(FeedbackPasos.objects.filter(feedback=feedback)
-                                  .order_by("orden"
-                                  .select_related("tipo_feedback")))
+            feedback_pasos = list(FeedbackPasos.objects.filter(feedback=feedback).select_related("tipo_feedback").order_by("orden"))
             
         contexto = {
             "intento": intento,
@@ -368,7 +396,6 @@ class CheckAnswer(View):
         }
         
         if request.GET.get("json"):
-            # construir dict minimalista
             return JsonResponse({
                 "success": True,
                 "intento_id": intento.id,
@@ -376,8 +403,20 @@ class CheckAnswer(View):
                 "puntos": puntos,
                 "pasos_intento": [{"orden": p.orden, "contenido": p.contenido} for p in pasos_intento],
                 "pasos_correctos": [{"orden": p.orden, "contenido": p.contenido} for p in pasos_correctos],
-                "feedback": feedback.feedback if feedback else None
+                "feedback": feedback.feedback if feedback else None,
+                "feedback_pasos": [
+                    {
+                        "orden": fp.orden,
+                        "contenido": fp.contenido,
+                        "tipo_feedback": fp.tipo_feedback.nombre if fp.tipo_feedback else None
+                    } for fp in feedback_pasos
+                ]
             })
+            
 
         # Render HTML
         return render(request, "ejercicios/check-respuesta.html", contexto)
+    
+    
+    # https://www.sympy.org/es/
+    # CALCULADORA/MUESTRA DE SIGNOS MATEMÁTICOS

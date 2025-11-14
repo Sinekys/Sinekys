@@ -3,7 +3,7 @@ import { CountdownTimer } from './timer.js';
 import { bindStepButtons, updateTimeDisplay, resetStepsContainer } from './ui-controllers.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const root = document.getElementById('diagnostico-root');
+  const root = document.getElementById('diagnostico-root') || document.getElementById('ejercicio-root');
 
   if (!root) {
     console.error('diagnostico-root element not found');
@@ -54,8 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Completa al menos un paso.');
         return;
       }
-    
-// Si está actualizadoooo por que me sigue dando erroroorrr
     const remaining = timer ? timer.getRemainingSeconds() : 0;
 
     const payload = {
