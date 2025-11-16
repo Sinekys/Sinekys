@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Planes y Precios{% endblock %}
+
+{% block content %}
+<section class="py-5" style="background:#0d0d0d; color:white;">
+    <div class="header-pricing-box text-center mb-5 pt-4">
+        <h1 class="fw-bold display-4" style="color:white;">Planes Sinekys</h1>
+        <p class="text-secondary fs-5 mt-2">Invierte en tu futuro. Elige la IA que potenciará tu éxito académico.</p>
+    </div>
+
+    <div class="custom-wrapper">
+        <div class="row g-4 justify-content-center">
+
+            <!-- PLAN ESTUDIANTE -->
+            <div class="col-lg-3 col-md-6">
+                <div class="p-4 rounded-4 plan-card">
+                    <h3 class="fw-bold text-warning fs-4"><i class="fa-solid fa-graduation-cap"></i> Estudiante</h3> 
+                    <p class="display-5 fw-bold mt-3">$5.600 <span class="fs-6 text-secondary">/mes</span></p>
+
+                    <p class="text-white mt-4 fw-light">Perfecto para <span class="fw-bold">aprobar</span> con asistencia IA especializada.</p>
+                    
+                    <ul class="list-unstyled text-start mt-3 features-list">
+                        <li><i class="fa-solid fa-check feature-check"></i> Acceso a IA Sinekys</li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Basado en tu malla universitaria</li>
+                        <li class="text-secondary"><i class="fa-solid fa-lightbulb feature-tip"></i> 1.500 consultas al mes</li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Métricas básicas de progreso</li>
+                        <li class="text-danger"><i class="fa-solid fa-xmark feature-x"></i> Creación de ejercicios (Solo uso)</li>
+                    </ul>
+
+                    <button onclick="checkout('basic')" class="btn w-100 mt-4 plan-btn-outline">
+                        ¡Comienza ahora!
+                    </button>
+                </div>
+            </div>
+
+            <!-- PLAN PROFESOR -->
+            <div class="col-lg-3 col-md-6">
+                <div class="p-4 rounded-4 plan-card popular-highlight">
+                    <div class="tag-popular"><i class="fa-solid fa-star"></i> Más Popular</div>
+                    <h3 class="fw-bold text-white fs-4"><i class="fa-solid fa-chalkboard-user"></i> Profesor</h3>
+                    <p class="display-5 fw-bold mt-3">$8.900 <span class="fs-6 text-secondary">/mes</span></p>
+
+                    <p class="text-white mt-4 fw-light">La herramienta ideal para <span class="fw-bold">personalizar</span> tu clase y evaluar.</p>
+
+                    <ul class="list-unstyled text-start mt-3 features-list">
+                        <li><i class="fa-solid fa-check feature-check"></i> Acceso total a IA Sinekys</li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Creación ilimitada de ejercicios</li>
+                        <li class="text-secondary"><i class="fa-solid fa-lightbulb feature-tip"></i> Gestión de hasta <span class="fw-bold">25 alumnos</span></li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Métricas completas de rendimiento grupal</li>
+                        <li class="text-danger"><i class="fa-solid fa-xmark feature-x"></i> Grupos de estudio</li>
+                    </ul>
+
+                    <button onclick="checkout('profesor')" class="btn w-100 mt-4 plan-btn-main">
+                        Transforma tu enseñanza
+                    </button>
+                </div>
+            </div>
+
+            <!-- PLAN ESTUDIANTE PRO -->
+            <div class="col-lg-3 col-md-6">
+                <div class="p-4 rounded-4 plan-card">
+                    <h3 class="fw-bold text-warning fs-4"><i class="fa-solid fa-user-gear"></i> Estudiante Pro</h3>
+                    <p class="display-5 fw-bold mt-3">$9.990 <span class="fs-6 text-secondary">/mes</span></p>
+                    
+                    <p class="text-white mt-4 fw-light">Para el usuario que necesita <span class="fw-bold">potencia y analítica individual</span>.</p>
+
+                    <ul class="list-unstyled text-start mt-3 features-list">
+                        <li><i class="fa-solid fa-check feature-check"></i> Acceso total sin límites</li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Consultas ilimitadas</li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Métricas personales avanzadas</li>
+                        <li class="text-secondary"><i class="fa-solid fa-lightbulb feature-tip"></i> Prioridad en el uso intensivo</li>
+                        <li class="text-danger"><i class="fa-solid fa-xmark feature-x"></i> Gestión de alumnos</li>
+                    </ul>
+
+                    <button onclick="checkout('superpro')" class="btn w-100 mt-4 plan-btn-outline">
+                        Acceso total y sin límites
+                    </button>
+                </div>
+            </div>
+
+            <!-- PLAN PROFESOR PRO -->
+            <div class="col-lg-3 col-md-6">
+                <div class="p-4 rounded-4 plan-card premium-highlight">
+                    <h3 class="fw-bold text-warning fs-4"><i class="fa-solid fa-crown"></i> Profesor Pro</h3>
+                    <p class="display-5 fw-bold mt-3">$19.900 <span class="fs-6 text-secondary">/mes</span></p>
+
+                    <p class="text-white mt-4 fw-light">La solución <span class="fw-bold">completa</span> para grandes grupos y coordinación.</p>
+
+                    <ul class="list-unstyled text-start mt-3 features-list">
+                        <li><i class="fa-solid fa-check feature-check"></i> Gestión de hasta <span class="fw-bold">100 alumnos</span></li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Creación ilimitada de ejercicios</li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Métricas avanzadas y detalladas</li>
+                        <li class="text-secondary"><i class="fa-solid fa-lightbulb feature-tip"></i> <span class="fw-bold">Grupos de estudio</span> y comparativos</li>
+                        <li><i class="fa-solid fa-check feature-check"></i> Soporte prioritario</li>
+                    </ul>
+
+                    <button onclick="checkout('superprofesor')" class="btn w-100 mt-4 plan-btn-main">
+                        Solicitar Demo Personalizada
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+<style>
+/* ... aquí mantienes todos tus estilos tal cual ... */
+</style>
+
+<script>
+async function checkout(plan) {
+    try {
+        const response = await fetch(`/api/payments/checkout/?plan=${plan}`, {
+            method: "GET",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.url) {
+            window.location.href = data.url;  // Redirige a Stripe Checkout
+        } else {
+            console.error("Stripe no devolvió URL:", data);
+            alert("No se pudo iniciar el pago. Intenta nuevamente.");
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error de conexión con el servidor.");
+    }
+}
+</script>
+
+{% endblock %}

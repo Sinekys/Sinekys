@@ -44,3 +44,6 @@ def goals(request):
 
 def how_does_it_work(request):
     return render(request, 'NoLogged/HowDoesItWork.html')
+
+def pricing(request):
+    return render(request, 'NoLogged/Pricing.html')

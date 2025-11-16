@@ -31,4 +31,5 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     
     path('ejercicio/', include(ejercicios_urls)),
+    path('api/payments/', include('subscriptions.urls')), 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
