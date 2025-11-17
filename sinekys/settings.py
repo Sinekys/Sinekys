@@ -66,7 +66,7 @@ INSTALLED_APPS = [
     # Providers
     'allauth.socialaccount.providers.google', 
     # 'allauth.socialaccount.providers.linkedin', 
-    
+    'subscriptions', 
     # Design
     "widget_tweaks",
     
