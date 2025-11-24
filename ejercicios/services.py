@@ -21,11 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 def actualizar_diagnostico(estudiante):
-    """
-    Estimar theta y su SE usando el modelo Rasch (1PL).
-    Devuelve (theta_estimado, se).
-    Implementación vectorizada, con bounds en [-3,3], manejo de fallos y logging.
-    """
+    # Estimar theta y su SE usando el modelo Rasch (1PL).
+    # Devuelve (theta_estimado, se).
+    # Implementación vectorizada, con bounds en [-3,3], manejo de fallos y logging.
+    
     intentos_qs = Intento.objects.filter(estudiante=estudiante).select_related("ejercicio")
     if not intentos_qs.exists():
         return 0.0, 1.0  # theta neutro, error grande por defecto
@@ -42,7 +41,6 @@ def actualizar_diagnostico(estudiante):
     # función de log-verosimilitud (retorna valor positivo = LL)
     def log_likelihood(theta_array):
         theta = float(theta_array[0])
-        # calcular z y probs vectorizados
         z = theta - b_arr
         # estabilidad numérica: expit es la sigmoid estable
         p = expit(z)  # valores en (0,1)
@@ -54,7 +52,7 @@ def actualizar_diagnostico(estudiante):
     def neg_log_like(theta_array):
         return -log_likelihood(theta_array)
 
-    # bounds para theta
+    # limites para theta
     bounds = [(-3.0, 3.0)]
 
     # ejecutar optimización
@@ -100,13 +98,18 @@ def actualizar_diagnostico(estudiante):
         info_terms = p_final * (1.0 - p_final)  # a=1 en 1PL
         info_total = float(np.sum(info_terms))
 
+        if info_total < 0.1:
+            logger.warning(f"Poca información para estudiante {estudiante.pk}: info_total={info_total}")
+            theta_estimado = 0.0 #neutral
+            se = 1.5 #error alto por falta de información
+            
         # si info_total es 0 o muy pequeño, evitar dividir por 0
-        if info_total <= 0 or np.isclose(info_total, 0.0):
+        elif info_total <= 0 or np.isclose(info_total, 0.0):
             logger.warning("Información total muy pequeña (<=0) para estudiante %s: info_total=%s, n_items=%d", getattr(estudiante, 'pk', '?'), info_total, len(b_arr))
             se = 1.0
         else:
             se = 1.0 / np.sqrt(info_total)
-            # protecciones razonables para SE según tu dominio
+            # protecciones estándares para SE no pregunten por qué, asi está la documentacion en varios sitios 
             se = float(np.clip(se, 0.2, 2.0))
     except Exception as e:
         logger.exception("Error calculando SE para estudiante %s: %s", getattr(estudiante, 'pk', '?'), e)

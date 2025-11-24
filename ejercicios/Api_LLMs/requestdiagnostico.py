@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 # Ojo, creo que esto es importnate mencionarlo, estas llamadas pueden ser algo costosas
 # Podría usar Redis para cachear los contexto, tanto de diagnostico como general y group
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("SINEKYS_OPENAI_API_KEY"))
 MODEL = os.getenv("MODEL", "gpt-4o-mini") 
 
 

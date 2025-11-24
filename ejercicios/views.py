@@ -2,7 +2,7 @@ from django.views import View
 from django.utils.decorators import method_decorator
 
 from django.shortcuts import render,get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound, Http404,HttpResponseNotAllowed
 from django.utils.decorators import method_decorator
 from django.db import transaction
 from django.utils import timezone
@@ -22,18 +22,23 @@ from accounts.models import Estudiante, Diagnostico
 
 # services
 from ejercicios.services import actualizar_diagnostico, seleccionar_siguiente_ejercicio
+from ejercicios.ia_feedback import save_ai_feedback_intento
+from ejercicios.Api_LLMs.requestfeedback import call_my_ai_service
 # logs
 import logging
 logger = logging.getLogger(__name__)
 
 # Mixins creados
 from .mixins import (
+    _diag_session_key,
+    _ejercicio_session_key,
     get_estudiante_from_request,
     prepare_next_payload_diagnostico,
     prepare_next_payload_normal,
     crear_intento_servidor,
     # render_diagnostico_template,
-    json_next_excercise_response,    
+    json_next_excercise_response,   
+    obtener_o_validar_diagnostico, 
     DiagnosticoCompletadoMixin,
     select_mode,
 )
@@ -81,14 +86,44 @@ class DiagnosticTestView(View):
         estudiante, err_resp = get_estudiante_from_request(request)
         if err_resp:
             return err_resp
-
-        payload, err = prepare_next_payload_diagnostico(estudiante, wants_json=wants_json)
-        if err:
-            return err
-
-        # payload puede indicar finalizado
-        if payload.get("finalizado"):
-            return render(request, "diagnostico/finalizado.html",payload)
+        diagnostico = obtener_o_validar_diagnostico(estudiante)
+        if diagnostico.finalizado or diagnostico.is_expired():
+            return render(request, "diagnostico/finalizado.html",{
+                "finalizado": True,
+                "diagnostico": diagnostico,
+                "motivo": "Tiempo agotado" if diagnostico.is_expired else "Precisión alcanzada"
+            })
+        session_key = _diag_session_key(diagnostico)
+        ejercicio = None
+        ejercicio_id_reserved = request.session.get(session_key)
+        if ejercicio_id_reserved:
+            try:
+                ejercicio = Ejercicio.objects.get(pk=int(ejercicio_id_reserved))
+            except Ejercicio.DoesNotExist:
+                request.session.pop(session_key,None)
+                ejercicio = None
+        if not ejercicio:
+            ejercicio = seleccionar_siguiente_ejercicio(estudiante)
+            if not ejercicio:
+                diagnostico.finalizado = True
+                diagnostico.save(update_fields=['finalizado'])
+                return render(request, "diagnostico/finalizado.html", {
+                    "finalizado": True,
+                    "diagnostico": diagnostico,
+                    "motivo": "No hay más ejercicios disponibles"
+                })
+            # Reservamos en sesión: ahora GET repetido devolverá mismo ejercicio
+            request.session[session_key] = ejercicio.id
+        contexto = select_mode(estudiante, ejercicio,"diagnostico")
+        remaining_seconds= max(0,int(diagnostico.tiempo_restante()))
+        payload = {
+            "ejercicio": ejercicio,
+            "contexto": contexto,
+            "diagnostico": diagnostico,
+            "remaining_seconds": remaining_seconds
+        }
+        # payload, err = prepare_next_payload_diagnostico(estudiante, wants_json=wants_json)
+        
 
         if wants_json:
             return JsonResponse({
@@ -178,6 +213,33 @@ class DiagnosticTestView(View):
             intento.id,estudiante.pk,ejercicio.id,puntos,es_correcto
         )
         
+        
+        try: 
+            ai_payload = {
+                "enunciado": ejercicio.enunciado,
+                "respuesta_estudiante": respuesta_estudiante,
+                "solucion": ejercicio.solucion,
+                "pasos": pasos
+            }
+            ai_result = call_my_ai_service(ai_payload)
+        except Exception as e:
+            logger.exception("Error llamando IA para intento %s: %s", intento.id, str(e))
+            ai_result = None
+        
+        if ai_result:
+            contexto_ia = ai_result.get("texto") or ai_result.get("contexto") or ""
+            feedback_json = ai_result.get("feedback_json") or ai_result.get("correccion") or {}
+            pasos_feedback = ai_result.get("pasos")  # opcional
+            save_ai_feedback_intento(
+                intento=intento,
+                contexto_ia=contexto_ia,
+                feedback_json=feedback_json,
+                fuente="chatgpt",
+                pasos_feedback=pasos_feedback
+            )
+        
+        
+        
         # actualizar dianostico y obtener theta + SE
         theta_actual, se = actualizar_diagnostico(estudiante)
         # actualizar el objeto Diagnostico con los nuevos valores
@@ -189,9 +251,16 @@ class DiagnosticTestView(View):
         # criterios de finalizacion
         # criterios de finalizacion
         num_items = Intento.objects.filter(estudiante=estudiante).count() #Ojo puede haber un problema, ya que si el es estudiante cancela la prueba, los intentos seguiran registrados y por lo tanto el número aumentaría
-        max_items = 30
+        max_items = 5 # CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30
         umbral_se = 0.4
         
+        
+        finalizado = (
+            se<umbral_se or
+            num_items>=max_items or
+            diagnostico.is_expired() or
+            (abs(theta_actual) >= 2.9 and num_items >=10)
+        )
         finalizado = False
         motivo = ""
         if se < umbral_se:
@@ -203,10 +272,14 @@ class DiagnosticTestView(View):
         elif diagnostico.is_expired():
             finalizado = True
             motivo = "Tiempo agotado"
+        elif abs(theta_actual) >= 2.9 and num_items >= 10:
+            motivo = "Nivel extremo detectado"
 
+        session_key = _diag_session_key(diagnostico)
         if finalizado:
             diagnostico.finalizado = True
             diagnostico.save(update_fields=["finalizado"])
+            request.session.pop(session_key,None)
             return JsonResponse({
                 "success": True,
                 "final": True,
@@ -220,6 +293,7 @@ class DiagnosticTestView(View):
             # Caso extremo: no hay más ejercicios
             diagnostico.finalizado = True
             diagnostico.save(update_fields=["finalizado"])
+            request.session.pop(session_key,None)
             return JsonResponse({
                 "success": True,
                 "final": True,
@@ -227,7 +301,7 @@ class DiagnosticTestView(View):
                 "theta": theta_actual,
                 "error": se
             })
-            
+        request.session[session_key] = siguiente_ejercicio.id
         contexto = select_mode(estudiante,siguiente_ejercicio,"diagnostico")
         
         return json_next_excercise_response(siguiente_ejercicio,contexto,theta=theta_actual,se=se,num_items=num_items)
@@ -240,25 +314,37 @@ class DiagnosticTestView(View):
 @method_decorator(login_required,name='dispatch')
 class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     def get(self, request, ejercicio_id= None):
+        estudiante, err = get_estudiante_from_request(request)
         if ejercicio_id:            
             ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
-            request. session[f"tiempo_inicio_ejercicio_{ejercicio.id}"] = timezone.now().isoformat()
+            request.session[_ejercicio_session_key(estudiante)] = ejercicio.id 
+            request.session[f"tiempo_inicio_ejercicio_{ejercicio.id}"] = timezone.now().isoformat()
             contexto = {"display_text": ejercicio.enunciado, "hint":""}
             return render(request, "ejercicio/ejercicio.html", {"ejercicio": ejercicio, "contexto":contexto,"ejercicio_id":ejercicio.id})
-        # fallback
-        estudiante, err = get_estudiante_from_request(request)
-        if err:
-            return err 
-        
-        payload, err_resp = prepare_next_payload_normal(estudiante)
-        if err_resp:
-            messages.error(request, err_resp)
-            return redirect('home')
         
         
-        ejercicio = payload["ejercicio"]
-        contexto = payload["contexto"]
+        session_key = _ejercicio_session_key(estudiante)
+        ejercicio = None
+        ejercicio_id_reserved = request.session.get(session_key)
+        if ejercicio_id_reserved:
+            try: 
+                ejercicio = Ejercicio.objects.get(pk=int(ejercicio_id_reserved))
+            except Ejercicio.DoesNotExist:
+                request.session.pop(session_key,None)
+                ejercicio = None
+        if not ejercicio:
+            payload, err_resp = prepare_next_payload_normal(estudiante)
+            if err_resp:
+                messages.error(request, err_resp)
+                return redirect('home')
+            
+            ejercicio = payload["ejercicio"]
+            contexto = payload["contexto"]
+            request.session[session_key] = ejercicio.id
+        else:
+            contexto = select_mode(estudiante, ejercicio, "normal")
         
+            
         # Tiempo en contestar
         request.session[f"tiempo_inicio_ejercicio_{ejercicio.id}"] = timezone.now().isoformat()
         
@@ -322,14 +408,42 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
             logger.error("Error al crear intento para estudiante %s en ejercicio %s", estudiante.pk, ejercicio.id)
             return JsonResponse({"error":"Error interno al crear el intento"}, status=500)
     
+        request.session.pop(_ejercicio_session_key(estudiante),None)        
         request.session.pop(f"tiempo_inicio_ejercicio_{ejercicio.id}", None)
-        
         logger.info(
             "Intento creado (ejercicios.view)_ intento_id=%s  estudiante=%s ejercicio=%s puntos=%s es_correcto=%s",
             intento.id,estudiante.pk,ejercicio.id,puntos,es_correcto
         )
+        try: 
+            ai_payload = {
+                "enunciado": ejercicio.enunciado,
+                "respuesta_estudiante": respuesta,
+                "solucion": ejercicio.solucion,
+                "pasos": pasos
+            }
+            ai_result = call_my_ai_service(ai_payload)
+        except Exception as e:
+            logger.exception("Error llamando IA para intento %s: %s", intento.id, str(e))
+            ai_result = None
+        
+        if ai_result:
+            contexto_ia = ai_result.get("texto") or ai_result.get("contexto") or ""
+            feedback_json = ai_result.get("feedback_json") or ai_result.get("correccion") or {}
+            pasos_feedback = ai_result.get("pasos")  # opcional
+            save_ai_feedback_intento(
+                intento=intento,
+                contexto_ia=contexto_ia,
+                feedback_json=feedback_json,
+                fuente="chatgpt",
+                pasos_feedback=pasos_feedback
+            )
+        
+        
+        
+        
+        
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.GET.get("json")
-        redirect_url = reverse("check-respuesta", kwargs={"intento_id": intento.id})
+        redirect_url = reverse("check-respuesta", kwargs={"intento_uuid": intento.uuid})
         if is_ajax:
             return JsonResponse({
                 "success": True,
@@ -360,15 +474,26 @@ class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
 
 @method_decorator(login_required, name='dispatch')
 class CheckAnswer(View):
-    def get(self,request, intento_id):
-        estudiante = getattr(request.user, "estudiante", None)
-        if not estudiante:
-            return HttpResponseForbidden("Acceso denegado")
+    def get(self,request, intento_uuid):
+        try:
+            estudiante = request.user.estudiante
+        except AttributeError:
+            messages.error(request, "No tienes permiso para acceder a esta página")
+            return redirect('')
         
-        intento = get_object_or_404(Intento.objects.select_related("ejercicio","estudiante"), pk=intento_id)
+        intento = get_object_or_404(Intento.objects.select_related("ejercicio","estudiante"), uuid=intento_uuid)
         
         if intento.estudiante_id != estudiante.id and not request.user.is_staff:
-            return HttpResponseForbidden("No tienes acceso a este intento")
+            home_url = reverse('mainPage')
+            html = (
+            '<!doctype html><html><head>'
+            f'<meta http-equiv="refresh" content="3;url={home_url}">'
+            '<meta charset="utf-8"></head><body>'
+            '<p>No tienes acceso a este intento. Serás redirigido a la página principal en 3 segundos.</p>'
+            f'<p>Si no, <a href="{home_url}">haz clic aquí</a>.</p>'
+            '</body></html>'
+            )
+            return HttpResponseForbidden(html)
         
         ejercicio = intento.ejercicio
         
@@ -416,7 +541,6 @@ class CheckAnswer(View):
 
         # Render HTML
         return render(request, "ejercicios/check-respuesta.html", contexto)
-    
     
     # https://www.sympy.org/es/
     # CALCULADORA/MUESTRA DE SIGNOS MATEMÁTICOS

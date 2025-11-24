@@ -1,41 +1,100 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
+
+# from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from accounts.models import Diagnostico, Estudiante
-from ejercicios.models import Intento
+
+from accounts.models import Diagnostico
+from ejercicios.models import Intento, Feedback, FeedbackPasos
+from ejercicios.mixins import get_estudiante_from_request
+from django.db.models import Prefetch
+from .services import get_user_type
+
+from django.conf import settings
+
+import logging
+logger = logging.getLogger(__name__)
 
 # Create your views here.
-
+@login_required
 def home_view(request):
-    
-    if not request.user.is_authenticated:
-        return render(request, 'index.html')
-    # usuario loggeado
-    
-    diagnostico_completado = False
-    if hasattr(request.user,'estudiante'):
-        diagnostico_completado = Diagnostico.objects.filter(
-            estudiante = request.user.estudiante,
-            finalizado=True
-        ).exists()
-    #ultimos ejercicios estudiante
-    # ultimos = Intento.objects.filter(estudiante=estudiante).select_related('ejercicio').order_by('-fecha_intento')[:10]
-    
+    user_type, profile = get_user_type(request.user)    
+    if user_type == 'estudiante':
+        from accounts.models import Diagnostico
+        from ejercicios.models import Intento, Feedback
+        from django.db.models import Prefetch
+        from django.conf import settings
+        
+        # Obtener configuración
+        max_items = getattr(settings, 'DIAGNOSTICO_MAX_EJERCICIOS', 30)
+        
+        # Determinar si el diagnóstico está completado
+        diagnostico_completado = False
+        diagnostico = None
+        
+        try:
+            diagnostico = profile.diagnostico
+            if diagnostico.finalizado:
+                diagnostico_completado = True
+        except Diagnostico.DoesNotExist:
+            # No tiene diagnóstico, crear uno si es necesario
+            if Intento.objects.filter(estudiante=profile).exists():
+                from accounts.services import obtener_o_validar_diagnostico
+                diagnostico = obtener_o_validar_diagnostico(profile)
+        
+        if not diagnostico_completado:
+            # Verificar si tiene suficientes ejercicios para considerar completado
+            num_intentos = Intento.objects.filter(estudiante=profile).count()
+            min_ejercicios = max(10, int(max_items * 0.3))  # Al menos 10 o 30% del máximo
+            
+            if num_intentos >= min_ejercicios:
+                diagnostico_completado = True
+                if diagnostico and not diagnostico.finalizado:
+                    diagnostico.finalizado = True
+                    diagnostico.save()
         
         
-    # if hasattr(request.user,'docente'):
-    #     estudiantes = Estudiante.objects.filter(
-    #         docente = request.user.docente,
-    #         
-    #     ).exists()    
+        feedback_prefetch = Prefetch(
+            'feedback_set',
+            queryset=Feedback.objects.order_by('-fecha_feedback'),
+            to_attr='feedbacks'
+        )
+        ultimos = Intento.objects.filter(
+            estudiante=profile
+        ).select_related(
+            'ejercicio'
+        ).prefetch_related(
+            feedback_prefetch
+        ).order_by(
+            '-fecha_intento'
+        )[:10]
         
-        
-    context = {
-        'diagnostico_completado': diagnostico_completado
-    }        
+        context = {
+            'is_estudiante': True,
+            'diagnostico_completado': diagnostico_completado,
+            'ultimos': ultimos
+        }
+        return render(request, 'main_page.html', context)
     
-    return render(request, 'main_page.html', context)
+    elif user_type == 'docente':
+        # Obtener datos específicos para docentes
+        context = {
+            'is_docente': True,
+            # ... datos específicos para docentes ...
+        }
+        return render(request, 'docentes/main_page.html', context)
+    
+    else:
+        # Usuario genérico (debería ser raro aquí por el @login_required)
+        return redirect('index')
+    
+    
+def index_view(request):
+    """Vista para usuarios no autenticados"""
+    if request.user.is_authenticated:
+        return redirect('mainPage')
+    return render(request, 'index.html')
 
-
+    
 def about(request):
     return render(request, 'NoLogged/About.html')
 

@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
+<header>
+    <div class="exit-button">
+      <title>{% block title %}Feedback{% endblock %}</title>
+      <a href="{% url 'mainPage' %}"><- Salir  </a>
+    </div>
 <h1>Resultado</h1>
 
 <div class="result">
@@ -16,6 +21,14 @@
 </div>
 
 <hr>
+  <h4>Explicación / solución sugerida por IA</h4>
+  {% if feedback %}
+    <pre style="white-space:pre-wrap;">{{ feedback.contexto_ejercicio }}</pre>
+    <h5>Corrección estructurada</h5>
+    <pre>{{ feedback.feedback|json_script:"fbjson" }}</pre>
+  {% else %}
+    <p>No hay feedback IA disponible.</p>
+  {% endif %}
 
 <div class="cols">
   <section class="student-steps">
@@ -27,7 +40,7 @@
         {% endfor %}
       </ol>
     {% else %}
-      <p>No ingresaste pasos.</p>
+      <p>No ingresaste pasos. Lo cual es raro porque debería haber al menos un paso, avisar a Administración</p>
     {% endif %}
   </section>
 
@@ -63,8 +76,4 @@
 
 <hr>
 
-<div class="actions">
-  <a href="{% url 'ejercicios-list' %}" class="btn">Volver al inicio</a>
-  <a href="{% url 'ejercicio-random' %}" class="btn btn-primary">Intentar otro ejercicio</a>
-</div>
 {% endblock %}

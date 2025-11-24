@@ -162,11 +162,3 @@ class Docente(AbstractBaseModel):
     def __str__(self):
         return f"Docente: {self.user.get_full_name()}"
 
-
-class Payment(models.Model):
-    estudiante = models.ForeignKey('Estudiante', on_delete=models.CASCADE, verbose_name='Estudiante')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Monto')
-    payment_date = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de pago')
-    method = models.CharField(max_length=50, verbose_name='Método de pago')
-    def __str__(self):
-        return f'Pago de {self.estudiante.user.get_full_name()} - {self.amount} - {self.payment_date}'

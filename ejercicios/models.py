@@ -3,7 +3,7 @@ from django.conf import settings
 from django.core import validators
 from django.utils.translation import gettext_lazy as _
 from accounts.models import AbstractBaseModel, Estudiante
-
+import uuid
 
 class AbstractResultado(models.Model):
     es_correcto = models.BooleanField(verbose_name="¿Es correcto?")
@@ -26,7 +26,7 @@ class AbstractResultado(models.Model):
 class AbstractTiempo(models.Model):
     tiempo_en_segundos = models.FloatField(
         verbose_name="Tiempo en segundos",
-        help_text="Tiempo total que tardó el estudiante en resolver el ejercicio"
+        help_text="Tiempo total que tardó el estudiante en resolver el ejercicio",
     )
     
     class Meta:
@@ -123,12 +123,16 @@ class PasoEjercicio(models.Model):
     #     return f"Paso {self.orden} - {self.ejercicio.id}"
 
 class Intento(AbstractResultado,AbstractTiempo):
-    # FKs
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     estudiante = models.ForeignKey("accounts.Estudiante", verbose_name="estudiante", on_delete=models.CASCADE)
     ejercicio = models.ForeignKey(Ejercicio, verbose_name="ejercicio", on_delete=models.CASCADE)
     # Campos
     respuesta_estudiante = models.CharField(max_length=150,verbose_name="respuesta estudiante")
     
+    class Meta:
+        indexes = [
+            models.Index(fields=['uuid'])
+        ]
     
     def __str__(self):
         return self.respuesta_estudiante
@@ -152,8 +156,8 @@ class IntentoPaso(models.Model):
 
 class Feedback(models.Model):
     intento = models.ForeignKey(Intento, verbose_name="feedback", on_delete=models.CASCADE)
-    contexto_ejercicio = models.CharField(max_length=512, verbose_name="contexto generado por IA")
-    resumen_ejercicio = models.CharField(max_length=512, verbose_name="")
+    contexto_ejercicio = models.TextField(verbose_name="contexto generado por IA", help_text="Explicación/Solución/COntexto generado por IA para este intento", null=True, blank=True)
+    # Mantener estrcutura con la correción paso a paso u otros metadatos necesarios
     feedback = models.JSONField(verbose_name="feedback generado por IA")
     fuente_ia = models.CharField(
         max_length=50,
@@ -167,7 +171,8 @@ class Feedback(models.Model):
     fecha_feedback = models.DateTimeField(auto_now_add=True, verbose_name="fecha del feedback")
 
     def __str__(self):
-        return self.contexto_ejercicio
+        snippet= (self.contexto_ejercicio or "")[:80]
+        return f"Feeback #{self.pk} - {snippet}" 
 
 class TipoFeedback(models.Model):
     nombre = models.CharField(max_length=50, unique=True, verbose_name="tipo de feedback")

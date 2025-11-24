@@ -6,7 +6,7 @@ from ..utils.text import normalize_text
 
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("SINEKYS_OPENAI_API_KEY"))
 MODEL = os.getenv("MODEL", "gpt-4o-mini") 
 logger = logging.getLogger(__name__)
 

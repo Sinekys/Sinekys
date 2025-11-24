@@ -11,9 +11,14 @@ from django.http import JsonResponse, HttpResponseBadRequest
 # import json
 from typing import Tuple, Optional, Dict, Any, List
 
-
 import logging
 logger = logging.getLogger(__name__)
+
+# Manejar sesión del estudiante para evitar que saque nuevos ejercicios sin terminar el actual
+def _diag_session_key(diagnostico):
+    return f"diagnostico_current_ej_{diagnostico.id}"
+def _ejercicio_session_key(estudiante):
+    return f"ejercicio_current_ej_{estudiante.pk}"
 
 try:
     from ejercicios.services import seleccionar_siguiente_ejercicio
