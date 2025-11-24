@@ -4,66 +4,68 @@
     {% trans "Signup" %}
 {% endblock head_title %}
 {% block content %}
+{% load static %}
+
+{% if not SOCIALACCOUNT_ONLY %}
     {% setvar link %}
-        <a href="{{ login_url }}">
-        {% endsetvar %}
-        {% setvar end_link %}
+        <a href="{{ login_url }}" class="text-orange-400 hover:text-orange-300 font-semibold transition duration-200">
+    {% endsetvar %}
+    {% setvar end_link %}
         </a>
     {% endsetvar %}
-{% load static %}
-<link rel="stylesheet" href="{% static 'css/base.css' %}">
-<style>
-    body {
-        background-color: #0d0d0d;
-        color: #fff;
-    }
-    .register-container {
-        max-width: 25rem;
-        margin: 2.5rem auto;
-        padding: 2rem 1.5rem;
-        background: #fff;
-        color: #1a1a1a;
-        border-radius: 0.75rem;
-        box-shadow: 0 0.125rem 1rem rgba(0,0,0,0.5);
-        width: 100%;
-        {% comment %} center {% endcomment %}
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-    *{
+    
+    <div class="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-8">
+        
+        <div class="max-w-md w-full p-8 bg-gray-800 text-white rounded-xl shadow-2xl border border-gray-700">
+            
+            <h1 class="text-3xl font-bold mb-6 text-center text-white">
+                {% trans "Registrarse" %}
+            </h1>
 
-        border: 1px solid red;
-    }    
-    </style>
-    <div class="register-container">
-    {% if not SOCIALACCOUNT_ONLY %}
-        {% url 'account_signup' as action_url %}
-        {% element form form=form method="post" action=action_url tags="entrance,signup" %}
-            {% slot body %}
-                {% csrf_token %}
-                {% element fields form=form unlabeled=True %}
-                {% endelement %}
-                {{ redirect_field }}
-            {% endslot %}
-            {% slot actions %}
-                {% element button type="submit" tags="prominent,login" %}
-                    Registrarse
-                {% endelement %}
-            {% endslot %}
-        {% endelement %}
-    {% endif %}
+            <p class="mb-6 text-sm text-center text-gray-400">
+                {% blocktrans %}¿Ya tienes cuenta? Entonces haz clic en {{ link }}Iniciar sesión{{ end_link }}.{% endblocktrans %}
+            </p>
+            
+            {% url 'account_signup' as action_url %}
+            
+            {% element form form=form method="post" action=action_url tags="entrance,signup" %}
+                {% slot body %}
+                    {% csrf_token %}
+                    
+                    <div class="space-y-4 mb-6">
+                        {% element fields form=form unlabeled=True %}
+                        {% endelement %}
+                    </div>
+                    
+                    {% if redirect_field %}
+                        {{ redirect_field }}
+                    {% endif %}
+                {% endslot %}
+                
+                {% slot actions %}
+                    {% element button type="submit" tags="prominent,signup" class="w-full bg-orange-500 text-black font-extrabold text-lg py-3 rounded-lg hover:bg-orange-400 transition duration-200 shadow-md" %}
+                        Registrarse
+                    {% endelement %}
+                {% endslot %}
+            {% endelement %}
+        </div>
     </div>
-    {% if PASSKEY_SIGNUP_ENABLED %}
-        {% element hr %}
-        {% endelement %}
-        {% element button href=signup_by_passkey_url tags="prominent,signup,outline,primary" %}
-            {% trans "Sign up using a passkey" %}
-        {% endelement %}
-    {% endif %}
-    {% if SOCIALACCOUNT_ENABLED %}
-        {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
-    {% endif %}
+{% endif %}
+
+<div class="flex items-center justify-center px-4 pb-8">
+    <div class="max-w-md w-full p-8 bg-gray-800 text-white rounded-xl shadow-2xl border border-gray-700 mt-4">
+        {% if PASSKEY_SIGNUP_ENABLED %}
+            {% element hr class="my-6 border-gray-600" %}
+            {% endelement %}
+            
+            {% element button href=signup_by_passkey_url tags="prominent,signup,outline,primary" class="w-full border-2 border-orange-500 text-orange-400 py-3 rounded-lg hover:bg-orange-500 hover:text-black transition duration-200 font-semibold" %}
+                {% trans "Sign up using a passkey" %}
+            {% endelement %}
+        {% endif %}
+        
+        {% if SOCIALACCOUNT_ENABLED %}
+            {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+        {% endif %}
+    </div>
+</div>
 {% endblock content %}

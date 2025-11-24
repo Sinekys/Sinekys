@@ -1,41 +1,128 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Menú Principal - Área de Usuario{% endblock %}
+
 {% block content %}
-<ul style="list-style: none; display: flex; gap: 30px; margin: 0; padding: 0;">
 
-    {% if diagnostico_completado %}
-        <li><a style="color: white; text-decoration: none;" href="{% url 'ejercicio' %}">Ejercicio</a></li>
-        <li><a style="color: white; text-decoration: none;" href="{% url 'matchmakingGroup' %}">Buscar grupo</a></li>
-        {% comment %} <li><a style="color: white; text-decoration: none;" href="{% url 'continuarEjercioGrupal' %}">Continuar ejercicio grupal</a></li> {% endcomment %}
-    {% else %}
-        <li style="color: #ccc;">Ejercicio (requiere diagnóstico)</li>
-        <li style="color: #ccc;">Buscar grupo (requiere diagnóstico)</li>
-        <li style="color: #ccc;">Continuar ejercicio grupal (requiere diagnóstico)</li>
-    {% endif %}
+<div class="max-w-7xl mx-auto py-12 md:py-20 px-4 sm:px-6 lg:px-8">
     
-</ul>
+    <header class="mb-12">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2">
+            Área de Usuario
+        </h1>
+        <p class="text-xl text-orange-400">
+            Comienza tu ruta de aprendizaje personalizada con Sinekys.
+        </p>
+    </header>
 
-<!-- Modal de confirmación -->
-<div id="modal-confirmacion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;">
-    <div style="background: white; color:black; padding: 30px; border-radius: 10px; max-width: 500px; text-align: center;">
-        <h3>⚠️ Importante</h3>
-        <p>La prueba de diagnóstico dura aproximadamente <strong>1 hora</strong> y no se puede pausar una vez iniciada.</p>
-        <p>¿Deseas continuar?</p>
-        <div style="margin-top: 20px;">
-            <button id="btn-cancelar" style="background: #e74c3c; color: white; border: none; padding: 8px 20px; border-radius: 5px; margin-right: 10px;">Cancelar</button>
-            <a href="{% url 'diagnostico' %}" style="background: #2ecc71; color: white; text-decoration: none; padding: 8px 20px; border-radius: 5px; display: inline-block;">Sí, comenzar</a>
+    <nav class="mb-12">
+        <ul class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-8 list-none p-0">
+
+            {% if diagnostico_completado %}
+                <li>
+                    <a class="block px-6 py-3 bg-orange-600 text-black font-bold rounded-lg shadow-md hover:bg-orange-500 transition duration-300" 
+                        href="{% url 'ejercicio' %}">
+                        <i class="fas fa-edit mr-2"></i> Ejercicio Individual
+                    </a>
+                </li>
+                <li>
+                    <a class="block px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md hover:bg-gray-600 transition duration-300" 
+                        href="{% url 'matchmakingGroup' %}">
+                        <i class="fas fa-users mr-2"></i> Buscar Grupo
+                    </a>
+                </li>
+            {% else %}
+                <li>
+                    <span class="block px-6 py-3 bg-gray-700 text-gray-500 rounded-lg shadow-inner cursor-not-allowed">
+                        <i class="fas fa-lock mr-2"></i> Ejercicio (requiere diagnóstico)
+                    </span>
+                </li>
+                <li>
+                    <span class="block px-6 py-3 bg-gray-700 text-gray-500 rounded-lg shadow-inner cursor-not-allowed">
+                        <i class="fas fa-lock mr-2"></i> Buscar grupo (requiere diagnóstico)
+                    </span>
+                </li>
+                <li>
+                    <span class="block px-6 py-3 bg-gray-700 text-gray-500 rounded-lg shadow-inner cursor-not-allowed">
+                        <i class="fas fa-lock mr-2"></i> Continuar ejercicio grupal
+                    </span>
+                </li>
+            {% endif %}
+            
+        </ul>
+    </nav>
+    
+    {% if not diagnostico_completado %}
+        <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border-l-4 border-yellow-300">
+            <h2 class="text-3xl font-extrabold text-white mb-4"><i class="fas fa-flask text-yellow-300 mr-3"></i> Diagnóstico Pendiente</h2>
+            <p class="text-lg text-gray-400 mb-6">
+                Para desbloquear tu ruta de aprendizaje y las funciones de práctica, debes completar el examen de diagnóstico. Este paso inicial le permite a nuestra IA **adaptar el contenido a tu malla curricular y nivel actual**.
+            </p>
+            
+            <button id="btn-iniciar-diagnostico" 
+                    class="px-8 py-3 bg-orange-500 text-black font-extrabold rounded-lg shadow-md hover:bg-orange-400 transition duration-300">
+                Iniciar Prueba de Diagnóstico
+            </button>
+        </section>
+    {% else %}
+        <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border-l-4 border-green-500">
+            <h2 class="text-3xl font-extrabold text-white mb-4"><i class="fas fa-check-circle text-green-500 mr-3"></i> ¡Diagnóstico Completo!</h2>
+            <p class="text-lg text-gray-400 mb-6">
+                Tu ruta de aprendizaje está activa. Dirígete a **Ejercicio Individual** para ver los temas que la IA seleccionó para ti, o **Buscar Grupo** para practicar con compañeros.
+            </p>
+            <a href="{% url 'ejercicio' %}" 
+                class="px-8 py-3 bg-orange-500 text-black font-extrabold rounded-lg shadow-md hover:bg-orange-400 transition duration-300">
+                Comenzar Práctica
+            </a>
+        </section>
+    {% endif %}
+
+</div>
+
+<div id="modal-confirmacion" 
+        class="hidden fixed inset-0 bg-black bg-opacity-70 z-[1000] flex justify-center items-center p-4">
+    <div class="bg-gray-900 text-white p-8 rounded-xl max-w-lg w-full shadow-2xl border border-gray-700">
+        <h3 class="text-2xl font-bold text-orange-400 mb-4 text-center">⚠️ Importante</h3>
+        <p class="text-gray-300 text-lg mb-2 text-center">
+            La prueba de diagnóstico dura aproximadamente **<span class="font-extrabold text-yellow-300">1 hora</span>** y **no se puede pausar** una vez iniciada.
+        </p>
+        <p class="text-xl font-semibold text-center mt-4">¿Deseas continuar?</p>
+        
+        <div class="mt-8 flex justify-center space-x-4">
+            <button id="btn-cancelar" 
+                    class="px-6 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-300">
+                Cancelar
+            </button>
+            <a href="{% url 'diagnostico' %}" 
+                class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-500 transition duration-300">
+                Sí, comenzar
+            </a>
         </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('btn-diagnostico').addEventListener('click', function() {
-        document.getElementById('modal-confirmacion').style.display = 'flex';
-    });
+    // Usamos el botón con ID 'btn-iniciar-diagnostico' para abrir el modal
+    const btnIniciarDiagnostico = document.getElementById('btn-iniciar-diagnostico');
+    const btnCancelar = document.getElementById('btn-cancelar');
+    const modalConfirmacion = document.getElementById('modal-confirmacion');
 
-    document.getElementById('btn-cancelar').addEventListener('click', function() {
-        document.getElementById('modal-confirmacion').style.display = 'none';
-    });
-</script>
+    if (btnIniciarDiagnostico) {
+        btnIniciarDiagnostico.addEventListener('click', function() {
+            modalConfirmacion.classList.remove('hidden');
+            modalConfirmacion.classList.add('flex');
+        });
+    }
+
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', function() {
+            modalConfirmacion.classList.remove('flex');
+            modalConfirmacion.classList.add('hidden');
+        });
+    }
+    
+    // NOTA: Si usas el botón 'btn-diagnostico' en tu navbar (base.html), 
+    // debes cambiar la lógica en base.html para que apunte a este botón o modal.
+</script> 
 {% endblock %}

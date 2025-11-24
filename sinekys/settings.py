@@ -44,6 +44,8 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # Application definition
+TAILWIND_APP_NAME = 'theme'
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -69,7 +71,10 @@ INSTALLED_APPS = [
     'subscriptions', 
     # Design
     "widget_tweaks",
-    
+    "tailwind",
+    "theme",
+    "django_browser_reload",
+    'usage',
 ]
 SITE_ID = 1
 

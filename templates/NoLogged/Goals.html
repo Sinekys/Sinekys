@@ -1,11 +1,66 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Nuestros Objetivos - Sinekys{% endblock %}
 
 {% block content %}
-<h1> Nuestro objetivos </h1>
-<p>1. Fomentar la colaboración entre desarrolladores.</p>
-<p>2. Crear herramientas que faciliten el trabajo en equipo.</p>
-<p>3. Promover buenas prácticas de desarrollo.</p>
+
+<div class="container max-w-6xl mx-auto py-16 md:py-24 px-4 sm:px-6 lg:px-8">
+
+    <section class="text-center mb-16">
+        <p class="text-orange-400 text-lg font-semibold uppercase tracking-wider mb-3">Nuestra Misión Principal</p>
+        <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-4 leading-tight">
+            Garantizar tu Éxito Académico
+        </h1>
+        <p class="text-xl text-gray-400 max-w-4xl mx-auto">
+            El objetivo de **Sinekys** es simple: **potenciar tu aprendizaje, facilitar la gestión de la carga académica y asegurar que alcances el máximo rendimiento** en tu área de estudio.
+        </p>
+    </section>
+    <section class="text-center mb-16">
+        <h2 class="text-3xl font-extrabold text-white mb-10">Objetivos Estratégicos de Sinekys</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <div class="bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 hover:-translate-y-1 hover:shadow-orange-400/30 transition duration-300">
+                <i class="fas fa-brain text-4xl text-orange-400 mb-4"></i>
+                <h3 class="text-xl font-bold text-white mb-3">1. Maximizar la Capacidad de Aprendizaje</h3>
+                <p class="text-gray-400 text-base leading-relaxed">
+                    Lograr que cada usuario **aprenda más rápido y retenga mejor la información** al tener a su disposición a un **Profesor Inteligente (IA)** las 24 horas del día. Te acompañamos para que seas el mejor en tu campo.
+                </p>
+            </div>
+            
+            <div class="bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 hover:-translate-y-1 hover:shadow-orange-400/30 transition duration-300">
+                <i class="fas fa-clock text-4xl text-orange-400 mb-4"></i>
+                <h3 class="text-xl font-bold text-white mb-3">2. Flexibilizar y Sobrellevar la Carga</h3>
+                <p class="text-gray-400 text-base leading-relaxed">
+                    Ayudarte a **sobrellevar la alta carga académica universitaria** proporcionando apoyo inmediato y ejercicios de práctica que se adaptan a tu horario, haciendo más eficiente cada minuto de estudio.
+                </p>
+            </div>
+            
+            <div class="bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700 hover:-translate-y-1 hover:shadow-orange-400/30 transition duration-300">
+                <i class="fas fa-redo-alt text-4xl text-orange-400 mb-4"></i>
+                <h3 class="text-xl font-bold text-white mb-3">3. Promover la Inclusión Educativa</h3>
+                <p class="text-gray-400 text-base leading-relaxed">
+                    Ser la herramienta esencial para aquellos que **retoman sus estudios después de mucho tiempo** o tienen **horarios inflexibles**, democratizando el acceso a la educación de calidad sin barreras de tiempo.
+                </p>
+            </div>
+        </div>
+    </section>
+    <section class="bg-black p-8 md:p-12 rounded-2xl shadow-2xl border border-orange-400/50">
+        <div class="text-center md:text-left">
+            <h2 class="text-3xl font-extrabold text-white mb-4">
+                El Valor Añadido: Tutoría Inteligente y 24/7
+            </h2>
+            <p class="text-lg text-gray-300 mb-6 max-w-4xl">
+                Nuestra Inteligencia Artificial no es un simple banco de preguntas. Está diseñada para ser tu **profesor personalizado de matemáticas**, con la capacidad de diagnosticar tus debilidades y ofrecer explicaciones a la medida de tu malla curricular, garantizando que el apoyo esté **siempre disponible** cuando lo necesites.
+            </p>
+            <a href="{% url 'how_does_it_work' %}" 
+                class="inline-block px-8 py-3 mt-4 bg-orange-600 text-black font-extrabold text-lg rounded-lg hover:bg-orange-500 transition duration-300 shadow-lg">
+                Ver cómo funciona Sinekys
+            </a>
+        </div>
+    </section>
+
+</div>
 
 {% endblock %}

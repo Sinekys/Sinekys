@@ -1,80 +1,94 @@
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}SINEKYS{% endblock %}
+{% block title %}Diagnóstico en Curso{% endblock %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>SINEKYS</title>
-  <style>
-    {% comment %} * { 
-      box-sizing: border-box;
-      border: 1px solid red;
-    } {% endcomment %}
-  </style>
-</head>
-<body>
-  <div class="exit-button">
-      <a href="{% url 'mainPage' %}"><- Salir  </a>
-  </div>
-  <header>
-    
-  </header>
 
-<main>
-  <div id="diagnostico-root"
-       data-post-url="{{ post_url }}"
-       data-duracion="{{diagnostico.duracion_segundos}}"           
-       data-diagnostico-id="{{ diagnostico.id }}"
-       data-fecha-inicio="{{ diagnostico.fecha_inicio|date:'c' }}"
-       data-remaining-seconds="{{ remaining_seconds }}"
-      >
-    <div class="time">Tiempo: --:--</div>
-  
-<div class="loading-bar" id="loading-bar" hidden> -------------- Queda pendiente -------------- </div>
+<div class="flex flex-col min-h-screen pt-4 pb-20 bg-gray-900 text-white">
 
-    <div class="main-container">
-<div class="exercise">
-  <p id="enunciado">{{ contexto.display_text }}</p>
-  
-</div>
-
-    <input type="hidden" id="ejercicio-id" value="{{ ejercicio.id}}">
-    <div class="panels">
-      <div class="left-panel">        
-        <div class="steps-box">
-          <div class="inputs"  id="steps-container" >
-            <input type="text" name="step[]" class="step-input" placeholder="Empieza aquí ^^" autofocus />
-          </div>
-        </div>
-        <div class="button-row">
-          <button type="button" id="add-step-btn">+ Agregar paso</button>
-          <button type="button" id="remove-step-btn" style="background-color:#551111;">− Quitar paso</button>
-        </div>
-      </div>
-
-      <div class="right-panel">
-        <div class="hint-box">
-          <button class="hint-button" type="button">¿Pista?</button>
-          <div class="hint-text">
-            <p>{{ contexto.hint }}</p>
-          </div>
-        </div>
-      </div>
+    <div class="px-6 mb-4">
+        <a href="{% url 'mainPage' %}" 
+            class="text-gray-400 hover:text-orange-400 transition duration-200 text-lg font-semibold flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Salir
+        </a>
     </div>
-  </div>
-</main>
-  <footer>
-    <button class="finalize-btn" id="finalize-btn" type="button">Siguiente</button>
-  </footer>
-</body>
-</html>
+
+    <main class="flex-grow flex justify-center px-4 md:px-8">
+        
+        <div id="diagnostico-root"
+              data-post-url="{{ post_url }}"
+              data-duracion="{{diagnostico.duracion_segundos}}"           
+              data-diagnostico-id="{{ diagnostico.id }}"
+              data-fecha-inicio="{{ diagnostico.fecha_inicio|date:'c' }}"
+              data-remaining-seconds="{{ remaining_seconds }}"
+              class="w-full max-w-5xl bg-gray-800 p-6 md:p-10 rounded-xl shadow-2xl border border-gray-700">
+            
+            <header class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <h1 class="text-2xl md:text-3xl font-bold text-white">Prueba de Diagnóstico</h1>
+                <div class="flex items-center space-x-2 text-xl font-extrabold text-orange-400">
+                    <i class="fas fa-clock"></i>
+                    <div class="time">Tiempo: --:--</div>
+                </div>
+            </header>
+
+            <div class="loading-bar bg-yellow-400 text-black font-semibold text-center p-2 rounded-lg mb-6" id="loading-bar" hidden>
+                -------------- Queda pendiente --------------
+            </div>
+
+            <div class="main-container grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="exercise bg-gray-700 p-4 rounded-lg border-l-4 border-orange-500 shadow-inner">
+                        <p id="enunciado" class="text-lg text-gray-200">{{ contexto.display_text }}</p>
+                    </div>
+
+                    <input type="hidden" id="ejercicio-id" value="{{ ejercicio.id}}">
+
+                    <div class="steps-box space-y-3">
+                        <h3 class="text-xl font-semibold text-white">Tu Solución (Pasos)</h3>
+                        <div class="inputs space-y-3" id="steps-container">
+                            <input type="text" name="step[]" class="step-input w-full p-3 rounded-lg border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition duration-200" placeholder="Empieza aquí ^^" autofocus />
+                        </div>
+                    </div>
+
+                    <div class="button-row flex space-x-4">
+                        <button type="button" id="add-step-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-500 transition duration-300">
+                            <i class="fas fa-plus mr-1"></i> Agregar paso
+                        </button>
+                        <button type="button" id="remove-step-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-500 transition duration-300">
+                            <i class="fas fa-minus mr-1"></i> Quitar paso
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="right-panel">
+                    <div class="hint-box sticky top-24 bg-gray-700 p-4 rounded-xl shadow-lg border border-gray-600">
+                        <h3 class="text-xl font-semibold text-white mb-3">Recursos de Apoyo</h3>
+                        <button class="hint-button w-full px-4 py-2 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-400 transition duration-300 mb-3" type="button">
+                            <i class="fas fa-lightbulb mr-2"></i> ¿Pista?
+                        </button>
+                        <div class="hint-text border-t border-gray-600 pt-3 text-gray-300 italic">
+                            <p>{{ contexto.hint }}</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4 shadow-xl flex justify-end">
+        <button class="finalize-btn px-8 py-3 bg-orange-500 text-black font-extrabold text-lg rounded-lg hover:bg-orange-400 transition duration-300" 
+                id="finalize-btn" type="button">
+            Siguiente Ejercicio <i class="fas fa-chevron-right ml-2"></i>
+        </button>
+    </footer>
+
+</div>
 
 {% endblock %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static 'css/diagnostico.css' %}">
     <script type="module" src="{% static 'js/diagnostico/main.js' %}"></script>
 {% endblock %}

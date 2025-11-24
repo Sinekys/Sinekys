@@ -89,7 +89,7 @@ def select_mode(estudiante,ejercicio, modo: str ):
 
     except Exception as e:
         logger.exception("Error al generar contexto para ejercicio %s en modo %s: %s", 
-                         getattr(ejercicio, "id", "?"), modo, str(e))
+                        getattr(ejercicio, "id", "?"), modo, str(e))
         return {
             "display_text": ejercicio.enunciado,
             "hint": "Contexto no disponible actualmente"
