@@ -1,0 +1,26 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('accounts', '0008_diagnostico_error_estimacion'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='diagnostico',
+            name='duracion_segundos',
+            field=models.PositiveIntegerField(default=3540),
+        ),
+        migrations.AddField(
+            model_name='diagnostico',
+            name='fecha_inicio',
+            field=models.DateTimeField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='diagnostico',
+            name='finalizado',
+            field=models.BooleanField(default=False),
+        ),
+    ]
