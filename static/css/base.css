@@ -1,77 +1,105 @@
-/* Buttons */ /* Buttons */ /* Buttons */ /* Buttons */ /* Buttons */
-.aa-btn {
-    font-family: inherit;
-    font-size: 1rem;
-    padding: 10px 20px;
-    border-radius: 8px;
+ body {
+    font-family: 'Roboto', Arial, Helvetica, sans-serif;
+    background: #0d0d0d;
+    color: #fff;
+    margin: 0;
+}
+
+/* Hover efecto neon naranja */
+nav ul li a:hover {
+    text-shadow: 0 0 5px #ff6f00, 0 0 10px #ff6f00, 0 0 20px #ff6f00;
+}
+
+/* --- Escritorio --- */
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+
+.navbar-logo {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #fff;
+    text-decoration: none;
+}
+
+.navbar-links-desktop {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-links-desktop li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-links-desktop {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.auth-links-desktop a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* --- Menú hamburguesa (solo móvil) --- */
+.menu-toggle {
+    display: none;
+    font-size: 2rem;
     cursor: pointer;
-    border: none;
-}
-
-/* Variantes por tag */
-.aa-btn-prominent {
-    font-weight: bold;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-.aa-btn-login {
-    background: #2C2C2C;
-    color: #FFFFFF;
-    font-weight: bold;
-}
-.aa-btn-login:hover {
-    background: #1A1A1A;
-    border-color: #00FFAB;
-}
-
-.aa-btn-danger {
-    background: #dc3545;
-    color: white;
-}
-.aa-btn-danger:hover {
-    background: #c82333;
-}
-
-.aa-btn-success {
-    background: #28a745;
-    color: white;
-}
-.aa-btn-success:hover {
-    background: #218838;
-}
-
-.aa-btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-.aa-btn-secondary:hover {
-    background: #5a6268;
-}
-/* Buttons */ /* Buttons */ /* Buttons */ /* Buttons */ /* Buttons */
-
-/* Input */ /* Input */ /* Input */ /* Input */ /* Input */
-.form-control {
-    border: 1px solid #ccc;
-    border-radius: 0.25rem;
-    padding: 0.5rem 0.75rem;
-    width: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.form-control:focus {
-    border-color: #66afe9;
-    outline: 0;
-    box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
-}
-.form-control-prominent {
-    border-color: #00FFAB;
-    background-color: #1a1a1a;
     color: #fff;
 }
-.form-control-login {
-    border-color: #00FFAB;
+.navbar-links-mobile {
+    display: none;
 }
 
+/* --- Móvil --- */
+/* --- Móvil --- */
+@media (max-width: 768px) {
+    .menu-toggle { display: block; }
+    .navbar-links-desktop, .auth-links-desktop { display: none; }
 
-/* Input */ /* Input */ /* Input */ /* Input */ /* Input */
+    .navbar-links-mobile {
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(13, 13, 13, 0.97);
+        padding: 1rem 0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        border-radius: 0 0 10px 10px;
+        text-align: center;
+        z-index: 9999;
+        transition: max-height 0.4s ease, opacity 0.4s ease;
+        opacity: 0;
+        max-height: 0;
+    }
+
+    .navbar-links-mobile.show {
+        display: flex;
+        opacity: 1;
+        max-height: 1000px;
+    }
+
+    .navbar-links-mobile li {
+        margin: 0.5rem 0;
+    }
+
+    .navbar-links-mobile li a {
+        font-size: 1.2rem;
+        padding: 0.5rem 1rem;
+        color: #fff;
+        text-decoration: none;
+        display: block;
+    }
+}

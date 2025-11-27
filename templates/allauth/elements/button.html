@@ -3,23 +3,12 @@
 <button
     type="{{ attrs.type|default:'button' }}"
     {% include "allauth/elements/_attrs.html" %}
-    class="
-        aa-btn
-        {% if 'prominent' in attrs.tags %}aa-btn-prominent{% endif %}
-        {% if 'login' in attrs.tags %}aa-btn-login{% endif %}
-        {% if 'danger' in attrs.tags %}aa-btn-danger{% endif %}
-        {% if 'success' in attrs.tags %}aa-btn-success{% endif %}
-        {% if 'secondary' in attrs.tags %}aa-btn-secondary{% endif %}
-        {% if attrs.class %}{{ attrs.class }}{% endif %}
-    "
+    class="aa-btn {{ attrs.class }}" {# Solo usamos aa-btn y la clase que le pasemos desde login.html #}
 >
     {% slot %}{% endslot %}
 </button>
 
 {% comment %}
-Opcionalmente, si quieres renderizar algo en base a tags,
-puedes usar _tags.html aquí:
+    Eliminamos la lógica condicional de tags para confiar plenamente en las clases de Tailwind
+    que inyectamos directamente en login.html (como w-full bg-orange-500).
 {% endcomment %}
-{% if attrs.tags %}
-    {% include "allauth/elements/_tags.html" %}
-{% endif %}

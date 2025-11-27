@@ -1,135 +1,103 @@
-{% load static %}
+{% load static tailwind_tags %}  {# ¡CARGAMOS TAILWIND! #}
 {% load i18n %}
+{% load allauth %}
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>
-            {% block head_title %}
-            {% endblock head_title %}
-        </title>
-        {% block extra_head %}
-        {% endblock extra_head %}
-            <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-            <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-            <style>
-                body {
-                    font-family: 'Roboto', Arial, Helvetica, sans-serif;
-                    background: #0d0d0d;
-                    color: #fff;
-                    width: 100%;
-                    margin: 0;
-                }
-                
-            </style>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-1y5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5" crossorigin="anonymous"></script>
-    </head>
-    <body>
+<html lang="es">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block head_title %}
+            {% element site_brand %}Sinekys{% endelement %}
+        {% endblock head_title %}
+    </title>
     
-        {% block body %}
-            {% if messages %}
-                <div>
-                    <strong>{% trans "Messages:" %}</strong>
-                    <ul>
-                        {% for message in messages %}<li>{{ message }}</li>{% endfor %}
-                    </ul>
+    {% tailwind_css %}  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+    {# Si necesitas styles.css para algo que no sea diseño estructural: #}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    {% block extra_head %}
+    {% endblock extra_head %}
+    
+    </head>
+<body class="bg-gray-900 text-white font-roboto m-0">
+
+    <header class="bg-black text-white p-4 border-b border-gray-800 sticky top-0 z-50">
+        <nav class="w-full max-w-7xl mx-auto">
+            <div class="flex justify-between items-center">
+                
+                <a class="text-2xl font-bold text-orange-500 no-underline hover:text-orange-400 transition duration-300" href="{% url 'mainPage' %}">
+                    {% if request.user.is_anonymous %}SINEKYS{% else %}Menú{% endif %}
+                </a>
+
+                <div class="md:hidden text-2xl cursor-pointer" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
                 </div>
-            {% endif %}
-            <div>
-                <ul>
-                    {% if user.is_authenticated %}
-                        <style>
-                        @media (max-width: 768px) {
-                            nav > div {
-                                flex-direction: column;
-                                align-items: flex-start !important;
-                            }
-                            nav ul {
-                                flex-direction: column;
-                                gap: 2vh !important;
-                            }
-                            nav div > div {
-                                margin-top: 1em;
-                                gap: 1vh !important;
-                            }
-                        }
-                        </style>
-                        {% url 'account_email' as email_url_ %}
-                        {% if email_url_ %}
-                            <li>
-                                <a href="{{ email_url_ }}">{% trans "Change Email" %}</a>
-                            </li>
-                        {% endif %}
-                        {% url 'account_change_password' as change_password_url_ %}
-                        {% if change_password_url_ %}
-                            <li>
-                                <a href="{{ change_password_url_ }}">{% trans "Change Password" %}</a>
-                            </li>
-                        {% endif %}
-                        {% url 'socialaccount_connections' as connections_url_ %}
-                        {% if connections_url_ %}
-                            <li>
-                                <a href="{{ connections_url_ }}">{% trans "Account Connections" %}</a>
-                            </li>
-                        {% endif %}
-                        {% url 'mfa_index' as mfa_url_ %}
-                        {% if mfa_url_ %}
-                            <li>
-                                <a href="{{ mfa_url_ }}">{% trans "Two-Factor Authentication" %}</a>
-                            </li>
-                        {% endif %}
-                        {% url 'usersessions_list' as usersessions_list_url_ %}
-                        {% if usersessions_list_url_ %}
-                            <li>
-                                <a href="{{ usersessions_list_url_ }}">{% trans "Sessions" %}</a>
-                            </li>
-                        {% endif %}
-                        {% url 'account_logout' as logout_url_ %}
-                        {% if logout_url_ %}
-                            <li>
-                                <a href="{{ logout_url_ }}">{% trans "Sign Out" %}</a>
-                            </li>
-                        {% endif %}
+
+                <ul class="hidden md:flex space-x-6 items-center list-none p-0 m-0">
+                    {% if request.user.is_anonymous %}
+                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'goals' %}">Nuestros objetivos</a></li>
+                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'about' %}">Sobre nosotros</a></li>
+                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'how_does_it_work' %}">¿Cómo funciona?</a></li>
                     {% else %}
-                        <nav style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                            <ul style="list-style: none; display: flex; gap: 5vh; margin: 0; padding: 0;">
-                                <li style="margin-right: auto;"><a style="color: white; text-decoration: none;" href="{% url 'mainPage' %}"><strong>SINEKYS</strong></a></li>
-                                <li><a href="{% url 'goals' %}" style="color: white; text-decoration: none;">Nuestros objetivos</a></li>
-                                <li><a href="{% url 'about' %}" style="color: white; text-decoration: none;">Sobre nosotros</a></li>
-                                <li><a href="{% url 'how_does_it_work' %}" style="color: white; text-decoration: none;">¿Cómo funciona?</a></li>
-                            </ul>
-                            <div style="display: flex; gap: 2vh;">
-                                <p style="margin: 0;"><a href="{% url 'account_login' %}" style="color: white; text-decoration: none;">Iniciar sesión</a></p>
-                                <p style="margin: 0;"><a href="{% url 'account_signup' %}" style="color: white; text-decoration: none;">Registrarse</a></p>
-                            </div>
-                        </div>
-                    </nav>
-                    <style>
-                        @media (max-width: 768px) {
-                            nav > div {
-                                flex-direction: column;
-                                align-items: flex-start !important;
-                            }
-                            nav ul {
-                                flex-direction: column;
-                                gap: 2vh !important;
-                            }
-                            nav div > div {
-                                margin-top: 1em;
-                                gap: 1vh !important;
-                            }
-                        }
-                        </style>
+                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'goals' %}">Perfil</a></li>
+                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'about' %}">Progreso</a></li>
+                        <li>
+                            <button id="btn-diagnostico" class="bg-transparent border-none text-white cursor-pointer underline hover:text-orange-500 transition duration-300">
+                                Prueba de diagnóstico
+                            </button>
+                        </li>
                     {% endif %}
+                    <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'pricing' %}">Pricing</a></li>
                 </ul>
+
+                <div class="hidden md:flex space-x-4 items-center">
+                    {% if request.user.is_anonymous %}
+                        <a class="text-white no-underline hover:text-orange-500 transition duration-300" href="{% url 'account_login' %}">Iniciar sesión</a>
+                        <a class="px-4 py-2 bg-orange-600 rounded-lg hover:bg-orange-500 transition duration-300 font-semibold" href="{% url 'account_signup' %}">Registrarse</a>
+                    {% else %}
+                        <span class="text-gray-400">Bienvenid@, **{{ request.user.username }}**!</span>
+                        <a class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 transition duration-300 font-semibold" href="{% url 'account_logout' %}">Cerrar sesión</a>
+                    {% endif %}
+                </div>
             </div>
-            {% block content %}
-            {% endblock content %}
-        {% endblock body %}
-        {% block extra_body %}
-        {% endblock extra_body %}
-    </body>
+            
+            <ul id="navbar-links-mobile" 
+                class="hidden md:hidden flex-col absolute top-full left-0 right-0 bg-gray-900/95 shadow-xl transition-all duration-300 ease-in-out border-t border-gray-700">
+                {# Mueve aquí los enlaces móviles, si deseas mantenerlos #}
+            </ul>
+            
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    <script>
+        // Toggle menú hamburguesa en móvil (MANTENEMOS EL JS)
+        const menuToggle = document.getElementById('menu-toggle');
+        const navbarMobile = document.getElementById('navbar-links-mobile');
+
+        if (menuToggle && navbarMobile) {
+            menuToggle.addEventListener('click', () => {
+                navbarMobile.classList.toggle('hidden');
+                navbarMobile.classList.toggle('flex');
+            });
+        }
+        // Código para el botón de diagnóstico (si es necesario)
+        const btnDiagnostico = document.getElementById('btn-diagnostico');
+        if (btnDiagnostico) {
+            btnDiagnostico.addEventListener('click', () => {
+                window.location.href = "{% url 'diagnostico' %}";
+            });
+        }
+    </script>
+    
+    {% block extra_body %}
+    {% endblock extra_body %}
+
+</body>
 </html>

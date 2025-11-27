@@ -1,8 +1,18 @@
-<div style="background: #111; color: #0f0; padding: 10px;">
-  DEBUG campos en form:
-  {% for f in form %}
-    {{ f.name }}{% if not forloop.last %}, {% endif %}
-  {% empty %}
-    (vacío)
-  {% endfor %}
-</div>
+{% load allauth %}
+
+{% element input name=name type=type label=label placeholder=placeholder id=id autocomplete=autocomplete autofocus=autofocus disabled=disabled inputmode=inputmode maxlength=maxlength minlength=minlength pattern=pattern readonly=readonly required=required size=size value=value %}
+{% endelement %}
+
+{% if help_text %}
+    {% element help_text %}
+        {{ help_text }}
+    {% endelement %}
+{% endif %}
+
+{% if errors %}
+    {% element errors %}
+        {% for error in errors %}
+            {{ error }}
+        {% endfor %}
+    {% endelement %}
+{% endif %}

@@ -8,6 +8,9 @@ from django.db import transaction
 from django.utils import timezone
 from django.urls import reverse
 
+from usage.services import can_user_attempt, register_attempt
+
+
 import json
 import re
 
@@ -353,37 +356,52 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
             "contexto": contexto,
             "ejercicio_id": ejercicio.id,
         })
-    @transaction.atomic        
+    @transaction.atomic
     def post(self, request):
         ct = request.content_type or ""
         if not ct.startswith("application/json"):
-            return JsonResponse({"error":"Se esperaba application/json"}, status=400)
-        
+            return JsonResponse({"error": "Se esperaba application/json"}, status=400)
+    
         estudiante, err = get_estudiante_from_request(request)
         if err:
             return err
     
+        # ============================
+        # 🔒 LÍMITE DIARIO DE INTENTOS
+        # ============================
+        from usage.services import can_user_attempt, register_attempt
+        can_attempt, limit, used = can_user_attempt(request.user)
+    
+        if not can_attempt:
+            return JsonResponse({
+                "error": "Has alcanzado tu límite diario de intentos.",
+                "limite": limit,
+                "usados": used
+            }, status=403)
+    
+        # Si pasa el límite → registra un intento consumido
+        register_attempt(request.user)
+        # ============================
+    
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
-            return JsonResponse({"error":"Json Inválido"}, status =400)
-        
+            return JsonResponse({"error": "Json Inválido"}, status=400)
+    
         ejercicio_id = data.get("ejercicio_id")
         respuesta = (data.get("respuesta") or "").strip()
         pasos = data.get("pasos", [])
-        
-        
+    
         if not ejercicio_id:
-            return JsonResponse({"error":"falta id del ejercicio"}, status= 400)
-        
+            return JsonResponse({"error": "falta id del ejercicio"}, status=400)
+    
         ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
         es_correcto, puntos = evaluar_respuesta(respuesta, ejercicio.solucion)
-        
+    
         tiempo_inicio_iso = request.session.get(f"tiempo_inicio_ejercicio_{ejercicio.id}")
-        tiempo_inicio = None
         tiempo_fin = timezone.now()
-        
-        # tiempo_en_segundos = 0.0
+    
+        tiempo_inicio = None
         if tiempo_inicio_iso:
             try:
                 tiempo_inicio = timezone.datetime.fromisoformat(tiempo_inicio_iso)
@@ -394,7 +412,7 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
                     "Error al calcular tiempo_en_segundos para estudiante %s y ejercicio %s: %s",
                     estudiante.pk, ejercicio.id, str(e)
                 )
-        
+    
         intento = crear_intento_servidor(
             estudiante=estudiante,
             ejercicio=ejercicio,
@@ -402,17 +420,18 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
             es_correcto=es_correcto,
             pasos=pasos,
             tiempo_inicio=tiempo_inicio,
-            tiempo_fin=tiempo_fin)
-        
+            tiempo_fin=tiempo_fin
+        )
+    
         if not intento:
             logger.error("Error al crear intento para estudiante %s en ejercicio %s", estudiante.pk, ejercicio.id)
-            return JsonResponse({"error":"Error interno al crear el intento"}, status=500)
+            return JsonResponse({"error": "Error interno al crear el intento"}, status=500)
     
         request.session.pop(_ejercicio_session_key(estudiante),None)        
         request.session.pop(f"tiempo_inicio_ejercicio_{ejercicio.id}", None)
         logger.info(
             "Intento creado (ejercicios.view)_ intento_id=%s  estudiante=%s ejercicio=%s puntos=%s es_correcto=%s",
-            intento.id,estudiante.pk,ejercicio.id,puntos,es_correcto
+            intento.id, estudiante.pk, ejercicio.id, puntos, es_correcto
         )
         try: 
             ai_payload = {
@@ -452,10 +471,84 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
                 "puntos": puntos,
                 "redirect_url": redirect_url
             })
-
+    
         return redirect(redirect_url)
-                
-        # return redirect(url)
+    
+    #@transaction.atomic        
+    #def post(self, request):
+    #    ct = request.content_type or ""
+    #    if not ct.startswith("application/json"):
+    #        return JsonResponse({"error":"Se esperaba application/json"}, status=400)
+    #    
+    #    estudiante, err = get_estudiante_from_request(request)
+#    #    if err:
+#    #        return err
+#    #
+    #    try:
+    #        data = json.loads(request.body)
+    #    except json.JSONDecodeError:
+    #        return JsonResponse({"error":"Json Inválido"}, status =400)
+    #    
+    #    ejercicio_id = data.get("ejercicio_id")
+    #    respuesta = (data.get("respuesta") or "").strip()
+    #    pasos = data.get("pasos", [])
+    #    
+    #    
+    #    if not ejercicio_id:
+    #        return JsonResponse({"error":"falta id del ejercicio"}, status= 400)
+    #    
+    #    ejercicio = get_object_or_404(Ejercicio, pk=ejercicio_id)
+    #    es_correcto, puntos = evaluar_respuesta(respuesta, ejercicio.solucion)
+    #    
+    #    tiempo_inicio_iso = request.session.get(f"tiempo_inicio_ejercicio_{ejercicio.id}")
+    #    tiempo_inicio = None
+    #    tiempo_fin = timezone.now()
+    #    
+    #    # tiempo_en_segundos = 0.0
+    #    if tiempo_inicio_iso:
+    #        try:
+    #            tiempo_inicio = timezone.datetime.fromisoformat(tiempo_inicio_iso)
+    #            if timezone.is_naive(tiempo_inicio):
+    #                tiempo_inicio = timezone.make_aware(tiempo_inicio, timezone.get_current_timezone())
+    #        except Exception as e:
+    #            logger.warning(
+    #                "Error al calcular tiempo_en_segundos para estudiante %s y ejercicio %s: %s",
+    #                estudiante.pk, ejercicio.id, str(e)
+    #            )
+    #    
+    #    intento = crear_intento_servidor(
+    #        estudiante=estudiante,
+    #        ejercicio=ejercicio,
+    #        respuesta_estudiante=respuesta,
+    #        es_correcto=es_correcto,
+    #        pasos=pasos,
+    #        tiempo_inicio=tiempo_inicio,
+    #        tiempo_fin=tiempo_fin)
+    #    
+    #    if not intento:
+#    #        logger.error("Error al crear intento para estudiante %s en ejercicio %s", estudiante.pk, ejercicio.id)
+#    #        return JsonResponse({"error":"Error interno al crear el intento"}, status=500)
+#    #
+    #    request.session.pop(f"tiempo_inicio_ejercicio_{ejercicio.id}", None)
+    #    
+    #    logger.info(
+    #        "Intento creado (ejercicios.view)_ intento_id=%s  estudiante=%s ejercicio=%s puntos=%s es_correcto=%s",
+    #        intento.id,estudiante.pk,ejercicio.id,puntos,es_correcto
+    #    )
+    #    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.GET.get("json")
+    #    redirect_url = reverse("check-respuesta", kwargs={"intento_id": intento.id})
+    #    if is_ajax:
+    #        return JsonResponse({
+    #            "success": True,
+    #            "intento_id": intento.id,
+    #            "es_correcto": es_correcto,
+    #       #     "puntos": puntos,
+    #       #     "redirect_url": redirect_url
+    #       # })
+#
+    #    return redirect(redirect_url)
+    #            
+    #    # return redirect(url)
 class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     def get(self,request):
         
