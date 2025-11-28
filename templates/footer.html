@@ -1,0 +1,84 @@
+<footer class="bg-black text-gray-400 border-t border-gray-800 relative overflow-hidden">
+
+    <!-- Luces decorativas -->
+    <div class="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-tr from-orange-500/20 to-transparent blur-3xl rounded-full animate-pulse-slow"></div>
+    <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-bl from-purple-500/20 to-transparent blur-3xl rounded-full animate-pulse-slow"></div>
+
+    <div class="relative max-w-7xl mx-auto py-14 px-6 sm:px-10 lg:px-12">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12">
+
+            <!-- Branding -->
+            <div class="lg:col-span-2 space-y-4">
+                <h3 class="text-4xl font-extrabold text-orange-400 tracking-tight hover:tracking-wider transition-all duration-300">
+                    Sinekys
+                </h3>
+                <p class="text-base leading-relaxed text-gray-300">
+                    Tu aprendizaje tiende a infinito. Plataforma educativa potenciada por IA para optimizar el rendimiento académico en universidades e institutos superiores.
+                </p>
+            </div>
+
+            <!-- Exploración -->
+            <div>
+                <h4 class="text-lg font-semibold text-white mb-4">Explora</h4>
+                <ul class="space-y-3">
+                    <li><a href="{% url 'index' %}" class="hover:text-orange-400 transition-all duration-200 hover:translate-x-1 inline-block">Inicio</a></li>
+                    <li><a href="{% url 'goals' %}" class="hover:text-orange-400 transition-all duration-200 hover:translate-x-1 inline-block">Objetivos</a></li>
+                    <li><a href="{% url 'how_does_it_work' %}" class="hover:text-orange-400 transition-all duration-200 hover:translate-x-1 inline-block">Cómo Funciona</a></li>
+                    <li><a href="{% url 'pricing' %}" class="hover:text-orange-400 transition-all duration-200 hover:translate-x-1 inline-block">Planes Premium</a></li>
+                    <li><a href="{% url 'about' %}" class="hover:text-orange-400 transition-all duration-200 hover:translate-x-1 inline-block">Quiénes Somos</a></li>
+                </ul>
+            </div>
+
+            <!-- Legal -->
+            <div>
+                <h4 class="text-lg font-semibold text-white mb-4">Legal</h4>
+                <ul class="space-y-3">
+                    <li><a href="{% url 'terminos' %}" class="hover:text-orange-400 transition-all duration-200 hover:translate-x-1 inline-block">Términos de Servicio</a></li>
+                    <li><a href="{% url 'privacidad' %}" class="hover:text-orange-400 transition-all duration-200 hover:translate-x-1 inline-block">Política de Privacidad</a></li>
+                    <li><a href="{% url 'ayuda' %}" class="hover:text-orange-400 transition-all duration-200 hover:translate-x-1 inline-block">Centro de Ayuda</a></li>
+                </ul>
+            </div>
+
+            <!-- Contacto -->
+            <div>
+                <h4 class="text-lg font-semibold text-white mb-4">Conecta</h4>
+
+                <a href="https://wa.me/56964892582" target="_blank" 
+                   class="flex items-center space-x-3 text-gray-400 hover:text-green-500 transition-all duration-300 transform hover:scale-110">
+                    <i class="fab fa-whatsapp text-2xl"></i>
+                    <span>+56 9 6489 2582</span>
+                </a>
+
+                <div class="flex space-x-6 mt-6">
+                    <!-- Instagram -->
+                    <a href="https://instagram.com/sinekys" target="_blank" 
+                       class="text-gray-400 hover:text-pink-500 transition-all duration-300 transform hover:-translate-y-1 hover:scale-110">
+                        <i class="fab fa-instagram text-2xl"></i>
+                    </a>
+
+                    <!-- TikTok -->
+                    <a href="https://tiktok.com/@sinekys" target="_blank" 
+                       class="text-gray-400 hover:text-white transition-all duration-300 transform hover:-translate-y-1 hover:scale-110">
+                        <i class="fab fa-tiktok text-2xl"></i>
+                    </a>
+
+                    <!-- GitHub -->
+                    <a href="https://github.com/sinekys" target="_blank" 
+                       class="text-gray-400 hover:text-white transition-all duration-300 transform hover:-translate-y-1 hover:scale-110">
+                        <i class="fab fa-github text-2xl"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Copyright -->
+        <div class="mt-14 pt-6 border-t border-gray-800 text-center">
+            <p class="text-sm text-gray-500">
+                &copy; {% now "Y" %} Sinekys — Todos los derechos reservados.
+            </p>
+        </div>
+
+    </div>
+</footer>

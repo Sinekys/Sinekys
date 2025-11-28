@@ -1,103 +1,14 @@
-{% load static tailwind_tags %}  {# ¡CARGAMOS TAILWIND! #}
+{% extends "base.html" %}
 {% load i18n %}
 {% load allauth %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        {% block head_title %}
-            {% element site_brand %}Sinekys{% endelement %}
-        {% endblock head_title %}
-    </title>
-    
-    {% tailwind_css %}  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
-    {# Si necesitas styles.css para algo que no sea diseño estructural: #}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    {% block extra_head %}
-    {% endblock extra_head %}
-    
-    </head>
-<body class="bg-gray-900 text-white font-roboto m-0">
 
-    <header class="bg-black text-white p-4 border-b border-gray-800 sticky top-0 z-50">
-        <nav class="w-full max-w-7xl mx-auto">
-            <div class="flex justify-between items-center">
-                
-                <a class="text-2xl font-bold text-orange-500 no-underline hover:text-orange-400 transition duration-300" href="{% url 'mainPage' %}">
-                    {% if request.user.is_anonymous %}SINEKYS{% else %}Menú{% endif %}
-                </a>
+{% block content %}
+    <div class="flex justify-center items-start pt-20 pb-10 min-h-[calc(100vh)]">
+        {% block inner_content %}
+            {% block message_container %}{% endblock message_container %}
+        {% endblock inner_content %}
+    </div>
+{% endblock content %}
 
-                <div class="md:hidden text-2xl cursor-pointer" id="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </div>
-
-                <ul class="hidden md:flex space-x-6 items-center list-none p-0 m-0">
-                    {% if request.user.is_anonymous %}
-                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'goals' %}">Nuestros objetivos</a></li>
-                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'about' %}">Sobre nosotros</a></li>
-                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'how_does_it_work' %}">¿Cómo funciona?</a></li>
-                    {% else %}
-                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'goals' %}">Perfil</a></li>
-                        <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'about' %}">Progreso</a></li>
-                        <li>
-                            <button id="btn-diagnostico" class="bg-transparent border-none text-white cursor-pointer underline hover:text-orange-500 transition duration-300">
-                                Prueba de diagnóstico
-                            </button>
-                        </li>
-                    {% endif %}
-                    <li><a class="hover:text-orange-500 transition duration-300" href="{% url 'pricing' %}">Pricing</a></li>
-                </ul>
-
-                <div class="hidden md:flex space-x-4 items-center">
-                    {% if request.user.is_anonymous %}
-                        <a class="text-white no-underline hover:text-orange-500 transition duration-300" href="{% url 'account_login' %}">Iniciar sesión</a>
-                        <a class="px-4 py-2 bg-orange-600 rounded-lg hover:bg-orange-500 transition duration-300 font-semibold" href="{% url 'account_signup' %}">Registrarse</a>
-                    {% else %}
-                        <span class="text-gray-400">Bienvenid@, **{{ request.user.username }}**!</span>
-                        <a class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 transition duration-300 font-semibold" href="{% url 'account_logout' %}">Cerrar sesión</a>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <ul id="navbar-links-mobile" 
-                class="hidden md:hidden flex-col absolute top-full left-0 right-0 bg-gray-900/95 shadow-xl transition-all duration-300 ease-in-out border-t border-gray-700">
-                {# Mueve aquí los enlaces móviles, si deseas mantenerlos #}
-            </ul>
-            
-        </nav>
-    </header>
-
-    <main>
-        {% block content %}
-        {% endblock content %}
-    </main>
-
-    <script>
-        // Toggle menú hamburguesa en móvil (MANTENEMOS EL JS)
-        const menuToggle = document.getElementById('menu-toggle');
-        const navbarMobile = document.getElementById('navbar-links-mobile');
-
-        if (menuToggle && navbarMobile) {
-            menuToggle.addEventListener('click', () => {
-                navbarMobile.classList.toggle('hidden');
-                navbarMobile.classList.toggle('flex');
-            });
-        }
-        // Código para el botón de diagnóstico (si es necesario)
-        const btnDiagnostico = document.getElementById('btn-diagnostico');
-        if (btnDiagnostico) {
-            btnDiagnostico.addEventListener('click', () => {
-                window.location.href = "{% url 'diagnostico' %}";
-            });
-        }
-    </script>
-    
-    {% block extra_body %}
-    {% endblock extra_body %}
-
-</body>
-</html>
+{% block extra_head %}{{ block.super }}{% endblock %}
+{% block extra_body %}{{ block.super }}{% endblock %}

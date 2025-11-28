@@ -4,9 +4,148 @@
 {% block title %}Nuestros Objetivos - Sinekys{% endblock %}
 
 {% block content %}
-<h1> Nuestro objetivos </h1>
-<p>1. Fomentar la colaboración entre estudiantes.</p>
-<p>2. Facilitar la comprensión de ejercicios.</p>
-<p>3. Preparar profesionales.</p>
 
+<div class="min-h-screen font-sans">
+
+    <!-- Hero con fondo oscuro -->
+    <section class="relative w-full h-screen flex items-center justify-center text-center bg-gray-900">
+        <!-- Imagen de fondo -->
+        <div class="absolute inset-0">
+        <img 
+            src="https://images.pexels.com/photos/34855131/pexels-photo-34855131.jpeg?_gl=1*1dhjxu9*_ga*MzE3OTgxOTU5LjE3NDY5MDcyNDQ.*_ga_8JE65Q40S6*czE3NjQzMTMwMjAkbzMwJGcxJHQxNzY0MzEzMDUxJGoyOSRsMCRoMA.." 
+            alt="Students studying"
+            class="w-full h-full object-cover brightness-75"
+        >
+    </div>
+
+        <!-- Overlay oscuro con transparencia -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+        <!-- Contenido del hero -->
+        <div class="relative z-10 px-6 max-w-4xl mx-auto">
+            <p class="text-orange-400 text-lg font-semibold uppercase tracking-wider mb-4">
+                Nuestra Misión Principal
+            </p>
+
+            <h1 class="text-5xl md:text-6xl font-extrabold mb-6 leading-tight text-white drop-shadow-lg">
+                Garantizar tu Éxito Académico
+            </h1>
+
+            <p class="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
+                El objetivo de <strong>Sinekys</strong> es simple: 
+                <strong>potenciar tu aprendizaje</strong>, facilitar la gestión de la carga académica y asegurar 
+                que alcances el máximo rendimiento en tu área de estudio.
+            </p>
+        </div>
+    </section>
+
+    <!-- Sección clara: Objetivos estratégicos -->
+    <section class="bg-white py-20 px-4 sm:px-6 lg:px-16">
+        <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 text-center mb-16">Objetivos Estratégicos de Sinekys</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+            
+            <!-- Card 1 -->
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-8 rounded-3xl shadow-lg border border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-transform duration-300">
+                <i class="fas fa-brain text-5xl text-orange-500 mb-6"></i>
+                <h3 class="text-2xl font-bold mb-3 text-gray-900">1. Maximizar la Capacidad de Aprendizaje</h3>
+                <p class="text-gray-700 text-base leading-relaxed">
+                    Lograr que cada usuario <strong>aprenda más rápido y retenga mejor la información</strong> 
+                    al tener a su disposición un <strong>Profesor Inteligente (IA)</strong> las 24 horas del día. 
+                    Te acompañamos para que seas el mejor en tu campo.
+                </p>
+            </div>
+            
+            <!-- Card 2 -->
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-8 rounded-3xl shadow-lg border border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-transform duration-300">
+                <i class="fas fa-clock text-5xl text-orange-500 mb-6"></i>
+                <h3 class="text-2xl font-bold mb-3 text-gray-900">2. Flexibilizar y Sobrellevar la Carga</h3>
+                <p class="text-gray-700 text-base leading-relaxed">
+                    Ayudarte a <strong>sobrellevar la alta carga académica universitaria</strong> 
+                    proporcionando apoyo inmediato y ejercicios de práctica que se adaptan a tu horario, 
+                    haciendo más eficiente cada minuto de estudio.
+                </p>
+            </div>
+            
+            <!-- Card 3 -->
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-8 rounded-3xl shadow-lg border border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-transform duration-300">
+                <i class="fas fa-redo-alt text-5xl text-orange-500 mb-6"></i>
+                <h3 class="text-2xl font-bold mb-3 text-gray-900">3. Promover la Inclusión Educativa</h3>
+                <p class="text-gray-700 text-base leading-relaxed">
+                    Ser la herramienta esencial para aquellos que <strong>retoman sus estudios después de mucho tiempo</strong> 
+                    o tienen <strong>horarios inflexibles</strong>, democratizando el acceso a la educación de calidad sin barreras de tiempo.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Valor añadido con fondo blur -->
+    <section class="relative w-full py-16 md:py-24 rounded-3xl overflow-hidden mx-4 md:mx-auto shadow-xl max-w-full">
+        <!-- Imagen de fondo con blur -->
+        <div class="absolute inset-0">
+            <img 
+                src="https://images.pexels.com/photos/18066309/pexels-photo-18066309.jpeg?_gl=1*1j5s5cb*_ga*MzE3OTgxOTU5LjE3NDY5MDcyNDQ.*_ga_8JE65Q40S6*czE3NjQzMTMwMjAkbzMwJGcxJHQxNzY0MzEzMjMxJGozOSRsMCRoMA.." 
+                alt="Valor Añadido" 
+                class="w-full h-full object-cover brightness-75 blur-sm"
+            >
+            <div class="absolute inset-0 bg-black/40"></div>
+        </div>
+    
+        <!-- Contenido centrado y responsivo -->
+        <div class="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-between px-4 md:px-6 gap-8">
+            <!-- Texto -->
+            <div class="text-center md:text-left flex-1">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-6">
+                    El Valor Añadido: Tutoría Inteligente y 24/7
+                </h2>
+                <p class="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">
+                    Nuestra Inteligencia Artificial no es un simple banco de preguntas. Está diseñada para ser tu <strong>profesor personalizado</strong>, 
+                    con la capacidad de diagnosticar tus debilidades y ofrecer explicaciones a la medida de tu malla curricular, garantizando que el apoyo esté <strong>siempre disponible</strong>.
+                </p>
+                <a href="{% url 'how_does_it_work' %}" 
+                    class="inline-block px-10 py-4 bg-gradient-to-r from-orange-500 to-orange-400 text-black font-extrabold text-lg rounded-full shadow-lg hover:scale-105 transform transition duration-300">
+                    Ver cómo funciona Sinekys
+                </a>
+            </div>
+    
+            <!-- Reloj en tiempo real -->
+            <div class="flex-1 flex flex-col items-center md:items-end mt-8 md:mt-0">
+                <div class="bg-black/50 rounded-xl p-6 flex flex-col items-center shadow-lg">
+                    <i class="fas fa-clock text-5xl text-orange-400 mb-4"></i>
+                    <span id="liveClock" class="text-white text-2xl font-bold"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Sección clara para destacar cards adicionales -->
+    <section class="bg-white py-20 px-4 sm:px-6 lg:px-16">
+        <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 text-center mb-16">Por qué elegir Sinekys</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div class="bg-gray-50 p-8 rounded-3xl shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-transform duration-300">
+                <i class="fas fa-user-check text-4xl text-orange-500 mb-4"></i>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">Soporte 24/7</h3>
+                <p class="text-gray-700 text-base leading-relaxed">
+                    Siempre tendrás asistencia y seguimiento personalizado con nuestra IA.
+                </p>
+            </div>
+            <div class="bg-gray-50 p-8 rounded-3xl shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-transform duration-300">
+                <i class="fas fa-chart-line text-4xl text-orange-500 mb-4"></i>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">Rendimiento Garantizado</h3>
+                <p class="text-gray-700 text-base leading-relaxed">
+                    Seguimos tu progreso y adaptamos el aprendizaje según tus necesidades.
+                </p>
+            </div>
+            <div class="bg-gray-50 p-8 rounded-3xl shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-transform duration-300">
+                <i class="fas fa-graduation-cap text-4xl text-orange-500 mb-4"></i>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">Aprendizaje Personalizado</h3>
+                <p class="text-gray-700 text-base leading-relaxed">
+                    Nuestra IA se ajusta a tu ritmo y estilo de estudio, maximizando resultados.
+                </p>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+{% include "footer.html" %}
 {% endblock %}

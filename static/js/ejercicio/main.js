@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     finalizeBtn.disabled = true;
     try {
       const pasos = Array.from(stepsContainer.getElementsByClassName('step-input'))
-                         .map(el => el.value.trim())
-                         .filter(v => v);
+                        .map(el => el.value.trim())
+                        .filter(v => v);
 
       if (pasos.length === 0) {
         alert('Completa al menos un paso.');

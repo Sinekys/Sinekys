@@ -48,7 +48,7 @@ def create_checkout_session(request):
             customer_email=user.email,
             client_reference_id=str(user.id),
             line_items=[{ "price": price_id, "quantity": 1 }],
-            success_url="https://tu-app.com/success",
+            success_url="http://127.0.0.1:8000/",
             cancel_url="https://tu-app.com/cancel",
         )
     except Exception as e:

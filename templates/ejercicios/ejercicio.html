@@ -1,74 +1,72 @@
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}SINEKYS{% endblock %}
+{% block title %}SINEKYS - Ejercicio{% endblock %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />    
-  <link rel="shortcut icon" type="image/png" href="{% static 'images/SinekysLogo48x48.png' %}">
-  <title>Ejercicio</title>
-  <style>
-    {% comment %} * { 
-      box-sizing: border-box;
-      border: 1px solid red;
-    } {% endcomment %}
-  </style>
-</head>
-<body>
-  <div class="exit-button">
-      <a href="{% url 'mainPage' %}"><- Salir  </a>
-  </div>
-  <header>
-    
-  </header>
 
-<main>
-  <div id="ejercicio-root"
-        data-post-url="{% url 'ejercicio' %}"
-        data-mode="normal"
-  >
-    <div class="main-container">
-<div class="exercise">
-  <p id="enunciado">{{ contexto.display_text }}</p>
-  
+<!-- Header con título y botón salir -->
+<header class="w-full max-w-4xl mx-auto flex items-center justify-between py-4 px-4 sm:px-6 lg:px-8">
+    <a href="{% url 'mainPage' %}" class="text-gray-900 font-bold hover:underline flex items-center">
+        ← Salir
+    </a>
+    <h1 class="text-2xl font-extrabold text-gray-900">Ejercicio</h1>
+    <div class="w-6"></div> <!-- Espaciador para balancear el flex -->
+</header>
+
+<main class="flex flex-col items-center py-4 px-4 sm:px-6 lg:px-8 bg-white min-h-screen">
+
+    <div id="ejercicio-root"
+         data-post-url="{% url 'ejercicio' %}"
+         data-mode="normal"
+         class="w-full max-w-4xl bg-gray-50 rounded-xl p-8 flex flex-col gap-6 shadow-lg">
+
+        <!-- Ejercicio -->
+        <div class="exercise bg-white border border-gray-200 rounded-lg p-5 text-gray-900 text-lg leading-relaxed shadow">
+            <p id="enunciado">{{ contexto.display_text }}</p>
+        </div>
+
+        <input type="hidden" id="ejercicio-id" value="{{ ejercicio.id }}">
+
+        <!-- Paneles -->
+        <div class="panels flex flex-wrap gap-5 md:gap-5">
+            
+            <!-- Panel Izquierdo -->
+            <div class="left-panel flex-1 min-w-[250px]">
+                <div class="steps-box bg-gray-50 border border-gray-200 rounded-lg p-5 mb-5 shadow-inner">
+                    <div class="inputs flex flex-col gap-3" id="steps-container">
+                        <input type="text" name="step[]" class="step-input w-full p-3 rounded-md border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Empieza aquí ^^" autofocus />
+                    </div>
+                </div>
+                <div class="button-row flex flex-wrap gap-2">
+                    <button type="button" id="add-step-btn" class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition">+ Agregar paso</button>
+                    <button type="button" id="remove-step-btn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition">− Quitar paso</button>
+                </div>
+            </div>
+
+            <!-- Panel Derecho -->
+            <div class="right-panel flex-1 min-w-[250px]">
+                <div class="hint-box relative bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-inner">
+                    <button class="hint-button w-full text-left bg-yellow-400 text-gray-900 font-bold px-4 py-2 rounded-md hover:bg-yellow-500 transition">¿Pista?</button>
+                    <div class="hint-text hidden mt-2 p-3 bg-white border border-gray-200 rounded-md text-gray-700 text-sm leading-relaxed shadow">
+                        <p>{{ contexto.hint }}</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- Botón Terminar fijo abajo -->
+<div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex justify-end">
+    <button id="finalize-btn" class="px-6 py-3 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition font-bold">Terminar</button>
 </div>
 
-    <input type="hidden" id="ejercicio-id" value="{{ ejercicio.id}}">
-    <div class="panels">
-      <div class="left-panel">        
-        <div class="steps-box">
-          <div class="inputs"  id="steps-container" >
-            <input type="text" name="step[]" class="step-input" placeholder="Empieza aquí ^^" autofocus />
-          </div>
-        </div>
-        <div class="button-row">
-          <button type="button" id="add-step-btn">+ Agregar paso</button>
-          <button type="button" id="remove-step-btn" style="background-color:#551111;">− Quitar paso</button>
-        </div>
-      </div>
+{% include "footer.html" %}
 
-      <div class="right-panel">
-        <div class="hint-box">
-          <button class="hint-button" type="button">¿Pista?</button>
-          <div class="hint-text">
-            <p>{{ contexto.hint }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</main>
-  <footer>
-    <button class="finalize-btn" id="finalize-btn" type="button">Terminar</button>
-  </footer>
-</body>
-</html>
-</style>
 {% endblock %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static 'css/diagnostico.css' %}">
-    <script type="module" src="{% static 'js/ejercicio/main.js' %}"></script>
+<script type="module" src="{% static 'js/ejercicio/main.js' %}"></script>
 {% endblock %}

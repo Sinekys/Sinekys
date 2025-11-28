@@ -1,180 +1,141 @@
 {% extends "base.html" %}
-{% load tz %}
-<style>
-    
-  *{
-        border: 1px solid red;
-    }
+{% load static %}
 
+{% block title %}Menú Principal - Área de Usuario{% endblock %}
 
-</style>
-{% block title %}Bienvenid@{% endblock %}
 {% block content %}
+<div class="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 py-16 px-4 sm:px-6 lg:px-8">
+    
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-16 text-center">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-4 drop-shadow-lg">
+                Área de Usuario
+            </h1>
+            <p class="text-xl text-orange-400 font-medium">
+                Comienza tu ruta de aprendizaje personalizada con Sinekys
+            </p>
+        </header>
 
-<div>
-    <!-- Módulos disponibles -->
-    <div class="container display-flex">
-        <h2>Módulos disponibles</h2>
+        <!-- Navegación -->
+        <nav class="mb-16">
+            <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {% if diagnostico_completado %}
+                    <li>
+                        <a href="{% url 'ejercicio' %}"
+                           class="block w-full px-6 py-5 bg-gradient-to-r from-orange-500 to-orange-400 text-black font-bold rounded-2xl shadow-lg hover:scale-105 transform transition duration-300 text-center">
+                            <i class="fas fa-edit mr-2"></i> Ejercicio Individual
+                        </a>
+                    </li>
 
+                    <li>
+                        <a href="{% url 'matchmakingGroup' %}"
+                           class="block w-full px-6 py-5 bg-gray-700 text-white font-bold rounded-2xl shadow-lg hover:bg-gray-600 hover:scale-105 transform transition duration-300 text-center">
+                            <i class="fas fa-users mr-2"></i> Buscar Grupo
+                        </a>
+                    </li>
+
+                    
+                    <li>
+                        <a href="{% url 'ejercicio_grupal' %}"
+                           class="block w-full px-6 py-5 bg-green-600 text-white font-bold rounded-2xl shadow-lg hover:bg-green-500 hover:scale-105 transform transition duration-300 text-center">
+                            <i class="fas fa-users-cog mr-2"></i> Continuar Ejercicio Grupal
+                        </a>
+                    </li>
+                    
+                {% else %}
+                    {% for item in disabled_items %}
+                    <li>
+                        <span class="block w-full px-6 py-5 bg-gray-800 text-gray-500 rounded-2xl shadow-inner flex items-center justify-center cursor-not-allowed">
+                            <i class="fas fa-lock mr-2"></i> {{ item }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- Diagnóstico -->
         {% if not diagnostico_completado %}
-        <div>
-            <p>Debes completar la prueba de diagnóstico para acceder a todos los módulos de ejercicios.</p>
-            <button id="btn-diagnostico">Iniciar prueba de diagnóstico</button>
-        </div>
-        {% endif %}
-
-        <div>
-            {% if diagnostico_completado %}
-            <div>
-                <h3>Ejercicios individuales</h3>
-                <p>Practica con ejercicios adaptados a tu nivel y carrera universitaria.</p>
-                <a href="{% url 'ejercicio' %}">Comenzar</a>
-            </div>
-{% comment %} 
-            <div>
-                <h3>Buscar grupo</h3>
-                <p>Resuelve ejercicios en colaboración con otros estudiantes de tu carrera.</p>
-                <a href="{% url 'matchmakingGroup' %}">Buscar compañeros</a>
-            </div>
-
-            <div>
-                <h3>Ejercicio grupal</h3>
-                <p>Continúa o revisa tus ejercicios grupales anteriores.</p>
-                <button disabled>Continuar ejercicio (próximamente)</button>
-            </div> {% endcomment %}
-            {% else %}
-            <div>
-                <h3>Ejercicios individuales</h3>
-                <p>Completa el diagnóstico para desbloquear este módulo.</p>
-                <button disabled>Requiere diagnóstico</button>
-            </div>
-{% comment %} 
-            <div>
-                <h3>Buscar grupo</h3>
-                <p>Completa el diagnóstico para desbloquear este módulo.</p>
-                <button disabled>Requiere diagnóstico</button>
-            </div>
-
-            <div>
-                <h3>Ejercicio grupal</h3>
-                <p>Completa el diagnóstico para desbloquear este módulo.</p>
-                <button disabled>Requiere diagnóstico</button>
-                <p>Próximamente disponible</p>
-            </div> {% endcomment %}
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Últimos ejercicios (carrusel) -->
-    {% if diagnostico_completado and ultimos %}
-    <div>
-        <h2>Mis últimos ejercicios</h2>
-        <p>Revisa tus ejercicios recientes y el feedback personalizado generado por nuestra IA.</p>
-
-        <div id="ultimosCarousel">
-            <div>
-                {% for intento in ultimos %}
-                <div {% if forloop.first %}class="active"{% endif %}>
-                    <div>
-                        <div>
-                            <h4>{{ intento.ejercicio.enunciado|truncatechars:50 }}</h4>
-                            <span>
-                                {% if intento.es_correcto %}
-                                Correcto
-                                {% else %}
-                                Incorrecto
-                                {% endif %}
-                            </span>
-                            <small>{{ intento.fecha_intento|localtime|date:"d/m/Y H:i" }}</small>
-                        </div>
-                        <div>
-                            <p><strong>Tu respuesta:</strong></p>
-                            <p>{{ intento.respuesta_estudiante|truncatechars:100 }}</p>
-
-                            {% if intento.feedbacks and intento.feedbacks.0 %}
-                            {% with fb=intento.feedbacks.0 %}
-                            <div>
-                                <p><strong>Explicación IA ({{ fb.fuente_ia }}):</strong></p>
-                                <p>{{ fb.contexto_ejercicio|default:"(Sin explicación IA)"|truncatechars:200 }}</p>
-                                <small>{{ fb.fecha_feedback|localtime|date:"d/m/Y H:i" }}</small>
-                            </div>
-                            {% endwith %}
-                            {% else %}
-                            <div>
-                                <p>Análisis de la IA aún no disponible para este ejercicio.</p>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <a href="{% url 'check-respuesta' intento.uuid %}">Revisar detalladamente</a>
-                        </div>
-                    </div>
+            <section class="bg-gray-800/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl border-l-4 border-yellow-400">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 flex items-center justify-center gap-3">
+                    <i class="fas fa-flask text-yellow-400"></i> Diagnóstico Pendiente
+                </h2>
+                <p class="text-gray-300 text-lg md:text-xl mb-8 text-center">
+                    Para desbloquear tu ruta de aprendizaje debes completar tu diagnóstico.  
+                    Nuestra IA adaptará el contenido según tu nivel y malla curricular.
+                </p>
+                <div class="text-center">
+                    <button id="btn-iniciar-diagnostico"
+                            class="px-10 py-4 bg-gradient-to-r from-orange-500 to-orange-400 text-black font-extrabold rounded-full shadow-xl hover:scale-105 transform transition duration-300">
+                        Iniciar Prueba de Diagnóstico
+                    </button>
                 </div>
-                {% endfor %}
-            </div>
-
-            {% if ultimos|length > 1 %}
-            <button data-bs-target="#ultimosCarousel" data-bs-slide="prev">Anterior</button>
-            <button data-bs-target="#ultimosCarousel" data-bs-slide="next">Siguiente</button>
-            {% endif %}
-        </div>
+            </section>
+        {% else %}
+            <section class="bg-gray-800/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl border-l-4 border-green-500">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 flex items-center justify-center gap-3">
+                    <i class="fas fa-check-circle text-green-500"></i> ¡Diagnóstico Completo!
+                </h2>
+                <p class="text-gray-300 text-lg md:text-xl mb-8 text-center">
+                    Tu ruta personalizada está lista. Comienza tus ejercicios ahora.
+                </p>
+                <div class="text-center">
+                    <a href="{% url 'ejercicio' %}"
+                       class="px-10 py-4 bg-gradient-to-r from-orange-500 to-orange-400 text-black font-extrabold rounded-full shadow-xl hover:scale-105 transform transition duration-300">
+                        Comenzar Práctica
+                    </a>
+                </div>
+            </section>
+        {% endif %}
     </div>
-    {% elif diagnostico_completado %}
-    <div>
-        <h2>Mis últimos ejercicios</h2>
-        <p>Aún no has completado ningún ejercicio. ¡Empieza a practicar ahora!</p>
-    </div>
-    {% endif %}
+</div>
 
-    <!-- Modal de confirmación -->
-    <div id="modalConfirmacion" style="display:none;">
-        <div>
-            <div>
-                <h5>Prueba de diagnóstico</h5>
-                <button id="btn-close-modal">X</button>
-            </div>
-            <div>
-                <p>La prueba de diagnóstico dura aproximadamente <strong>1 hora</strong> y no se puede pausar una vez iniciada.</p>
-                <p>¿Deseas continuar?</p>
-            </div>
-            <div>
-                <button id="btn-cancelar-modal">Cancelar</button>
-                <a href="{% url 'diagnostico' %}">Sí, comenzar</a>
-            </div>
+<!-- MODAL -->
+<div id="modal-confirmacion"
+     class="hidden fixed inset-0 bg-black bg-opacity-70 z-[1000] flex justify-center items-center p-4">
+
+    <div class="bg-gray-900/95 text-white p-8 rounded-3xl max-w-lg w-full shadow-2xl border border-gray-700">
+        <h3 class="text-2xl font-bold text-orange-400 mb-4 text-center">⚠️ Importante</h3>
+
+        <p class="text-gray-300 text-lg mb-2 text-center">
+            La prueba dura <span class="font-extrabold text-yellow-400">1 hora</span> y no se puede pausar.
+        </p>
+
+        <p class="text-xl font-semibold text-center mt-4">¿Deseas continuar?</p>
+
+        <div class="mt-8 flex justify-center space-x-4">
+            <button id="btn-cancelar"
+                class="px-6 py-2 bg-gray-700 text-white font-semibold rounded-full hover:bg-gray-600 transition">
+                Cancelar
+            </button>
+
+            <a href="{% url 'diagnostico' %}"
+               class="px-6 py-2 bg-green-600 text-white font-semibold rounded-full hover:bg-green-500 transition">
+                Sí, comenzar
+            </a>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnDiagnostico = document.getElementById('btn-diagnostico');
-        const modalConfirmacion = document.getElementById('modalConfirmacion');
-        const btnCloseModal = document.getElementById('btn-close-modal');
-        const btnCancelModal = document.getElementById('btn-cancelar-modal');
+    const btnIniciarDiagnostico = document.getElementById('btn-iniciar-diagnostico');
+    const btnCancelar = document.getElementById('btn-cancelar');
+    const modalConfirmacion = document.getElementById('modal-confirmacion');
 
-        if (btnDiagnostico) {
-            btnDiagnostico.addEventListener('click', function() {
-                modalConfirmacion.style.display = 'block';
-            });
-        }
-
-        function closeModal() {
-            modalConfirmacion.style.display = 'none';
-        }
-
-        if (btnCloseModal) {
-            btnCloseModal.addEventListener('click', closeModal);
-        }
-
-        if (btnCancelModal) {
-            btnCancelModal.addEventListener('click', closeModal);
-        }
-
-        window.addEventListener('click', function(event) {
-            if (event.target === modalConfirmacion) {
-                closeModal();
-            }
+    if (btnIniciarDiagnostico) {
+        btnIniciarDiagnostico.addEventListener('click', () => {
+            modalConfirmacion.classList.remove('hidden');
+            modalConfirmacion.classList.add('flex');
         });
-    });
+    }
+
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', () => {
+            modalConfirmacion.classList.remove('flex');
+            modalConfirmacion.classList.add('hidden');
+        });
+    }
 </script>
+
 {% endblock %}

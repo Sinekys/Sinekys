@@ -106,3 +106,14 @@ def how_does_it_work(request):
 
 def pricing(request):
     return render(request, 'NoLogged/Pricing.html')
+
+def terminos(request):
+    return render(request, 'legal/Terminos.html')
+def privacidad(request):
+    return render(request, 'legal/Privacidad.html')      
+def ayuda(request):
+    return render(request, 'legal/Ayuda.html')
+
+def ejercicio_grupal_view(request):
+    # Lógica para el ejercicio grupal
+    return render(request, 'future/ejercicio_grupal.html')
