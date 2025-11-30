@@ -45,6 +45,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Application definition
 TAILWIND_APP_NAME = 'theme'
+ACCOUNT_ADAPTER = "accounts.account_adapter.MyAccountAdapter"
 
 
 INSTALLED_APPS = [

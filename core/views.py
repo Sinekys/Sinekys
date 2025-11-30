@@ -117,3 +117,7 @@ def ayuda(request):
 def ejercicio_grupal_view(request):
     # Lógica para el ejercicio grupal
     return render(request, 'future/ejercicio_grupal.html')
+
+def dashboard(request):
+    
+    return render(request, 'dashboard/dashboard.html')

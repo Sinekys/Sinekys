@@ -1,0 +1,190 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Docente</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- NAVBAR -->
+    <nav class="bg-white shadow p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Panel del Docente</h1>
+        <a href="{% url 'account_logout' %}" class="text-red-500 hover:underline">
+            Cerrar sesión
+        </a>
+    </nav>
+
+    <main class="max-w-7xl mx-auto mt-8 px-4">
+
+        <!-- SELECTORES DE CARRERA Y MATERIA -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Filtrar estudiantes</h2>
+
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Carrera -->
+                <div>
+                    <label class="block mb-1 font-medium">Carrera</label>
+                    <select name="carrera_id"
+                        class="w-full p-2 border rounded">
+                        <option value="">Seleccione carrera</option>
+                        {% for c in carreras %}
+                            <option value="{{ c.id }}"
+                                {% if selected_carrera and selected_carrera.id == c.id %}selected{% endif %}>
+                                {{ c.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Materia -->
+                <div>
+                    <label class="block mb-1 font-medium">Materia</label>
+                    <select name="materia_id"
+                        class="w-full p-2 border rounded">
+                        <option value="">Seleccione materia</option>
+                        {% for m in materias %}
+                            <option value="{{ m.id }}"
+                                {% if selected_materia and selected_materia.id == m.id %}selected{% endif %}>
+                                {{ m.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex items-end">
+                    <button class="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700">
+                        Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if selected_carrera and selected_materia %}
+
+        <!-- RESUMEN GLOBAL -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            
+            <div class="bg-blue-600 text-white p-5 rounded-lg shadow">
+                <p class="text-sm">Estudiantes totales</p>
+                <p class="text-3xl font-bold">{{ summary.num_estudiantes }}</p>
+            </div>
+
+            <div class="bg-green-600 text-white p-5 rounded-lg shadow">
+                <p class="text-sm">Intentos totales</p>
+                <p class="text-3xl font-bold">{{ summary.total_intentos }}</p>
+            </div>
+
+            <div class="bg-purple-600 text-white p-5 rounded-lg shadow">
+                <p class="text-sm">Promedio de precisión</p>
+                <p class="text-3xl font-bold">
+                    {% if summary.promedio_accuracy %}
+                        {{ summary.promedio_accuracy }}%
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+            </div>
+
+        </div>
+
+        <!-- GRÁFICOS -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Precisión por estudiante</h3>
+                <canvas id="accuracyChart"></canvas>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Intentos por estudiante</h3>
+                <canvas id="attemptsChart"></canvas>
+            </div>
+
+        </div>
+
+        <!-- TABLA DE ESTUDIANTES -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-semibold mb-4">Estudiantes</h3>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full border rounded-lg overflow-hidden">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="p-3 text-left">Nombre</th>
+                            <th class="p-3 text-left">Semestre</th>
+                            <th class="p-3 text-center">Intentos</th>
+                            <th class="p-3 text-center">Precisión</th>
+                            <th class="p-3 text-center">Último intento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students_data %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3">{{ s.first_name }} {{ s.last_name }}</td>
+                            <td class="p-3">{{ s.semestre_actual }}</td>
+                            <td class="p-3 text-center">{{ s.total_intentos }}</td>
+                            <td class="p-3 text-center">
+                                {% if s.accuracy %}
+                                    {{ s.accuracy }}%
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="p-3 text-center">{{ s.last_intento|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </main>
+
+    <!-- SCRIPT PARA GRÁFICOS -->
+    {% if selected_carrera and selected_materia %}
+    <script>
+        async function loadCharts() {
+            const url = "{% url 'dashboard_data_json' %}?carrera_id={{ selected_carrera.id }}&materia_id={{ selected_materia.id }}";
+            const res = await fetch(url);
+            const data = await res.json();
+
+            // Accuracy chart
+            new Chart(document.getElementById("accuracyChart"), {
+                type: "bar",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "% de precisión",
+                        data: data.accuracies
+                    }]
+                }
+            });
+
+            // Attempts chart
+            new Chart(document.getElementById("attemptsChart"), {
+                type: "bar",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Intentos totales",
+                        data: data.attempts
+                    }]
+                }
+            });
+        }
+
+        loadCharts();
+    </script>
+    {% endif %}
+
+</body>
+</html>

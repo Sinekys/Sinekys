@@ -32,4 +32,7 @@ urlpatterns = [
     
     path('ejercicio/', include(ejercicios_urls)),
     path('api/payments/', include('subscriptions.urls')), 
+    path('profesor/', include('profesor.urls', namespace='profesor')),
+
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
