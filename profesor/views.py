@@ -1,139 +1,124 @@
 from django.shortcuts import render, get_object_or_404
-from django.db.models import Count, Avg, Max, Q, F
-from django.http import JsonResponse
-from core.models import Carrera, Materia,CarreraMateria
-from accounts.models import Estudiante
 from django.contrib.auth.decorators import login_required
+from accounts.models import Estudiante
+from core.models import Carrera
+from ejercicios.models import Intento, Ejercicio, TipoEjercicio
+from django.db.models import Count, Q, Avg, Sum
+from django.utils.timezone import now, timedelta
+
 
 @login_required
 def dashboard_profesor(request):
-    """
-    Vista principal del dashboard del docente.
-    Parámetros GET (opcionales):
-        - carrera_id
-        - materia_id
-    Si no se envían, muestra un resumen general.
-    """
-    carrera_id = request.GET.get('carrera_id')
-    materia_id = request.GET.get('materia_id')
 
+    carrera_id = request.GET.get("carrera_id")
     carreras = Carrera.objects.all()
-    materias = Materia.objects.all()
 
     context = {
-        'carreras': carreras,
-        'materias': materias,
-        'selected_carrera': None,
-        'selected_materia': None,
-        'students_data': [],
-        'summary': {},
+        "carreras": carreras,
+        "selected_carrera": None,
+
+        # Data tablas
+        "students": [],
+
+        # Data gráficos
+        "chart_labels": [],
+        "chart_intentos": [],
+        "chart_accuracy": [],
+        "chart_correctos": [],
+        "chart_incorrectos": [],
+
+        # Nuevos gráficos
+        "chart_tiempo": [],
+        "chart_dificultad": [],
+        "chart_tipos_labels": [],
+        "chart_tipos_count": [],
+        "chart_intentos_por_dia_labels": [],
+        "chart_intentos_por_dia_data": [],
     }
 
-    if carrera_id and materia_id:
+    if carrera_id:
         carrera = get_object_or_404(Carrera, pk=carrera_id)
-        materia = get_object_or_404(Materia, pk=materia_id)
-        context['selected_carrera'] = carrera
-        context['selected_materia'] = materia
+        context["selected_carrera"] = carrera
 
-        # Averiguar el/los semestres de la relación carrera-materia
-        cm_qs = CarreraMateria.objects.filter(carrera=carrera, materia=materia)
-        semestres = list(cm_qs.values_list('semestre', flat=True))
-
-        # Tomaremos estudiantes que están en la misma carrera y cuyo semestre_actual
-        # esté dentro de los semestres relacionados
-        estudiantes_qs = Estudiante.objects.filter(
-            carrera=carrera,
-            semestre_actual__in=semestres
-        ).select_related('user')
-
-        # Anotar métricas de intentos por estudiante
-        estudiantes_annot = estudiantes_qs.annotate(
-            total_intentos=Count('intentos'),
-            total_aciertos=Count('intentos', filter=Q(intentos__es_correcto=True)),
-            avg_tiempo=Avg('intentos__tiempo_en_segundos'),
-            last_intento=Max('intentos__fecha_intento')
+        estudiantes = (
+            Estudiante.objects
+            .filter(carrera=carrera)
+            .select_related("user")
+            .annotate(
+                total_intentos=Count("intento"),
+                total_correctos=Count("intento", filter=Q(intento__es_correcto=True)),
+                total_incorrectos=Count("intento", filter=Q(intento__es_correcto=False)),
+                accuracy=Avg("intento__puntos"),
+                tiempo_promedio=Avg("intento__tiempo_en_segundos"),
+                dificultad_promedio=Avg("intento__ejercicio__dificultad"),
+            )
         )
 
         students_data = []
-        total_attempts = 0
-        acc_sum = 0
-        students_with_attempts = 0
 
-        for est in estudiantes_annot:
-            attempts = est.total_intentos or 0
-            correct = est.total_aciertos or 0
-            avg_time = est.avg_tiempo or 0
-            last_try = est.last_intento
-            accuracy = (correct / attempts * 100) if attempts > 0 else None
+        for est in estudiantes:
 
-            if attempts > 0:
-                total_attempts += attempts
-                acc_sum += accuracy
-                students_with_attempts += 1
+            if est.total_intentos > 0:
+                pct_correctos = round((est.total_correctos / est.total_intentos) * 100, 2)
+            else:
+                pct_correctos = 0
+
+            accuracy_val = round((est.accuracy or 0) * 100, 2)
 
             students_data.append({
-                'estudiante_id': est.id,
-                'username': getattr(est.user, 'username', ''),
-                'first_name': getattr(est.user, 'first_name', ''),
-                'last_name': getattr(est.user, 'last_name', ''),
-                'semestre_actual': est.semestre_actual,
-                'total_intentos': attempts,
-                'total_aciertos': correct,
-                'accuracy': round(accuracy, 2) if accuracy is not None else None,
-                'avg_tiempo': round(avg_time, 2) if avg_time else None,
-                'last_intento': last_try,
+                "id": est.id,
+                "username": est.user.username,
+                "first_name": est.user.first_name,
+                "last_name": est.user.last_name,
+                "semestre_actual": est.semestre_actual,
+                "total_intentos": est.total_intentos,
+                "total_correctos": est.total_correctos,
+                "total_incorrectos": est.total_incorrectos,
+                "porcentaje_correctos": pct_correctos,
+                "accuracy_promedio": accuracy_val,
+                "tiempo_promedio": round(est.tiempo_promedio or 0, 2),
+                "dificultad_promedio": round(est.dificultad_promedio or 0, 2),
             })
 
-        # Resumen global
-        summary = {
-            'num_estudiantes': estudiantes_qs.count(),
-            'total_intentos': total_attempts,
-            'promedio_accuracy': round((acc_sum / students_with_attempts), 2) if students_with_attempts else None,
-            'students_with_attempts': students_with_attempts,
-        }
+            # Charts
+            context["chart_labels"].append(f"{est.user.first_name} {est.user.last_name}")
+            context["chart_intentos"].append(est.total_intentos)
+            context["chart_accuracy"].append(accuracy_val)
+            context["chart_correctos"].append(est.total_correctos)
+            context["chart_incorrectos"].append(est.total_incorrectos)
+            context["chart_tiempo"].append(round(est.tiempo_promedio or 0, 2))
+            context["chart_dificultad"].append(round(est.dificultad_promedio or 0, 2))
 
-        context['students_data'] = students_data
-        context['summary'] = summary
+        context["students"] = students_data
 
-    return render(request, 'dashboard/dashboard.html', context)
+        # -------------------------------
+        # 📊 DISTRIBUCIÓN POR TIPO DE EJERCICIO
+        # -------------------------------
+        tipos = (
+            TipoEjercicio.objects
+            .annotate(total=Count("ejercicio__intento"))
+            .filter(total__gt=0)
+        )
 
+        context["chart_tipos_labels"] = [t.tipo_ejercicio for t in tipos]
+        context["chart_tipos_count"] = [t.total for t in tipos]
 
-@login_required
-def dashboard_data_json(request):
-    """
-    Endpoint JSON para obtener datos (por ejemplo para Chart.js).
-    Debe recibir carrera_id y materia_id por GET.
-    """
-    carrera_id = request.GET.get('carrera_id')
-    materia_id = request.GET.get('materia_id')
-    if not (carrera_id and materia_id):
-        return JsonResponse({'error': 'falta carrera_id o materia_id'}, status=400)
+        # -------------------------------
+        # 📊 INTENTOS POR DÍA (últimos 7 días)
+        # -------------------------------
+        hace_7_dias = now() - timedelta(days=7)
 
-    carrera = get_object_or_404(Carrera, pk=carrera_id)
-    materia = get_object_or_404(Materia, pk=materia_id)
-    cm_qs = CarreraMateria.objects.filter(carrera=carrera, materia=materia)
-    semestres = list(cm_qs.values_list('semestre', flat=True))
+        intentos_por_dia = (
+            Intento.objects
+            .filter(estudiante__carrera=carrera, fecha_intento__gte=hace_7_dias)
+            .extra({"day": "DATE(fecha_intento)"})
+            .values("day")
+            .annotate(total=Count("id"))
+            .order_by("day")
+        )
 
-    estudiantes_qs = Estudiante.objects.filter(carrera=carrera, semestre_actual__in=semestres).select_related('user')
-    estudiantes_annot = estudiantes_qs.annotate(
-        total_intentos=Count('intentos'),
-        total_aciertos=Count('intentos', filter=Q(intentos__es_correcto=True))
-    )
+        for d in intentos_por_dia:
+            context["chart_intentos_por_dia_labels"].append(str(d["day"]))
+            context["chart_intentos_por_dia_data"].append(d["total"])
 
-    labels = []
-    accuracies = []
-    attempts = []
-    for est in estudiantes_annot:
-        attempts_count = est.total_intentos or 0
-        correct = est.total_aciertos or 0
-        accuracy = (correct / attempts_count * 100) if attempts_count > 0 else 0
-        username = getattr(est.user, 'username', '') or f"{getattr(est.user, 'first_name','')} {getattr(est.user,'last_name','')}"
-        labels.append(username)
-        accuracies.append(round(accuracy, 2))
-        attempts.append(attempts_count)
-
-    return JsonResponse({
-        'labels': labels,
-        'accuracies': accuracies,
-        'attempts': attempts,
-    })
+    return render(request, "dashboard/dashboard.html", context)

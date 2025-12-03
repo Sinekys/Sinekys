@@ -8,6 +8,7 @@ from ejercicios.models import Intento, Feedback, FeedbackPasos
 from ejercicios.mixins import get_estudiante_from_request
 from django.db.models import Prefetch
 from .services import get_user_type
+from core.models import Carrera, Materia
 
 from django.conf import settings
 
@@ -119,5 +120,8 @@ def ejercicio_grupal_view(request):
     return render(request, 'future/ejercicio_grupal.html')
 
 def dashboard(request):
-    
-    return render(request, 'dashboard/dashboard.html')
+    carreras = Carrera.objects.all()  # ← AQUÍ
+    return render(request, 'dashboard/dashboard.html', {
+        "carreras": carreras,
+        "materias": Materia.objects.all()
+    })

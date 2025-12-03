@@ -76,6 +76,8 @@ INSTALLED_APPS = [
     "theme",
     "django_browser_reload",
     'usage',
+    'mathfilters',
+
 ]
 SITE_ID = 1
 

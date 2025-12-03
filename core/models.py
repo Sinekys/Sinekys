@@ -56,7 +56,7 @@ class CarreraMateria(models.Model):
 class Seccion(models.Model):
     nombre = models.CharField(max_length=50, verbose_name='Nombre de la sección')
     jornada = models.CharField(verbose_name="jornada de la materia",
-                               choices=[('diurna','Diurna'),
+                                choices=[('diurna','Diurna'),
                                         ('vespertina','Vespertina')])
     def __str__(self):
         return self.nombre

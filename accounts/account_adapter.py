@@ -10,9 +10,9 @@ class MyAccountAdapter(DefaultAccountAdapter):
         if hasattr(user, "rol_id") and user.rol_id:
             # Valor que usas para distinguir roles
             if user.rol_id == 1:   # por ejemplo: 1 = docente
-                return "/dashboard/"
+                return "/profesor/dashboard/"
             elif user.rol_id == 2:  # 2 = alumno
-                return "/mainPage.html"
+                return "/inicio/"
         
         # Si no tiene rol, redirigir por defecto
         return "/"
