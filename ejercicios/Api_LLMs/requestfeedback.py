@@ -11,7 +11,9 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("SINEKYS_OPENAI_API_KEY"))
+# Solo inicializar cliente OpenAI si tenemos API key
+openai_api_key = os.getenv("SINEKYS_OPENAI_API_KEY", "")
+client = OpenAI(api_key=openai_api_key) if openai_api_key else None
 MODEL = os.getenv("MODEL", "gpt-4o-mini") 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +84,15 @@ def call_my_ai_service(payload: dict, max_retries: int = 2, temperature: float =
     while attempt < max_retries:
         attempt += 1
         try:
+            # Si no hay cliente OpenAI, retornar fallback
+            if not client:
+                logger.warning("OpenAI client not initialized (missing API key)")
+                return {
+                    "texto": f"Servicio de IA no disponible. Repasa el enunciado: {enunciado}",
+                    "feedback_json": {},
+                    "pasos": []
+                }
+            
             # logger.debug("LLM feedback call attempt %d for enunciado[:80]=%s", attempt, enunciado[:80])
             resp = client.chat.completions.create(
                 model=MODEL,

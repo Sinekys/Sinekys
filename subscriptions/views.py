@@ -9,8 +9,9 @@ from accounts.models import CustomUser
 from subscriptions.models import Subscription
 from stripe import SignatureVerificationError
 
-# Asegúrate de que tu clave secreta esté configurada correctamente
-stripe.api_key = settings.STRIPE_SECRET_KEY
+# Configurar clave secreta de Stripe solo si está disponible
+if settings.STRIPE_SECRET_KEY:
+    stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 @csrf_exempt
@@ -65,6 +66,10 @@ def stripe_webhook(request):
     Maneja los eventos de webhook de Stripe para sincronizar el estado
     de la suscripción en la base de datos de Django.
     """
+    # Si no hay webhook secret, rechazar silenciosamente (desarrollo sin Stripe)
+    if not settings.STRIPE_WEBHOOK_SECRET:
+        return HttpResponse(status=200)
+    
     payload = request.body
     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
     webhook_secret = settings.STRIPE_WEBHOOK_SECRET

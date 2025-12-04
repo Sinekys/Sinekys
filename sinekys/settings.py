@@ -12,22 +12,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 
-STRIPE_PRICE_BASIC = os.getenv("STRIPE_PRICE_BASIC")
-STRIPE_PRICE_PROFESOR = os.getenv("STRIPE_PRICE_PROFESOR")
-STRIPE_PRICE_SUPERPRO = os.getenv("STRIPE_PRICE_SUPERPRO")
-STRIPE_PRICE_SUPERPROFESOR = os.getenv("STRIPE_PRICE_SUPERPROFESOR")
+STRIPE_PRICE_BASIC = os.getenv("STRIPE_PRICE_BASIC", "")
+STRIPE_PRICE_PROFESOR = os.getenv("STRIPE_PRICE_PROFESOR", "")
+STRIPE_PRICE_SUPERPRO = os.getenv("STRIPE_PRICE_SUPERPRO", "")
+STRIPE_PRICE_SUPERPROFESOR = os.getenv("STRIPE_PRICE_SUPERPROFESOR", "")
 
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'sinekys-production.up.railway.app']
 
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1',
+    'https://sinekys-production.up.railway.app',
 ]
 
 SESSION_COOKIE_SECURE = True
@@ -38,8 +39,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'           # o tu proveedor
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('G_EMAIL')  # Tu correo de Gmail
-EMAIL_HOST_PASSWORD = os.getenv('G_STANDARD_PASSWORD')  # Tu contraseña o app password
+EMAIL_HOST_USER = os.getenv('G_EMAIL', 'noreply@sinekys.com')  # Tu correo de Gmail
+EMAIL_HOST_PASSWORD = os.getenv('G_STANDARD_PASSWORD', '')  # Tu contraseña o app password
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
@@ -158,11 +159,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('PORT'),
+        'NAME': os.getenv('DB_NAME', 'sinekys_db'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('PORT', '5432'),
         'OPTIONS': {
             'options': '-c client_encoding=UTF8'
         }
@@ -231,9 +232,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('G_EMAIL')
-EMAIL_HOST_PASSWORD = os.getenv('G_PASSWORD') 
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
+EMAIL_HOST_USER = os.getenv('G_EMAIL', 'noreply@sinekys.com')
+EMAIL_HOST_PASSWORD = os.getenv('G_PASSWORD', '') 
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@sinekys.com')
 LOGIN_REDIRECT_URL = '/'
 
 # ACCOUNT_AUTHENTICATION_METHOD = 'email' #'username_email' # It says its deprecated...

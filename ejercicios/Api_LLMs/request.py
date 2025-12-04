@@ -6,7 +6,9 @@ from ..utils.text import normalize_text
 
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("SINEKYS_OPENAI_API_KEY"))
+# Solo inicializar cliente OpenAI si tenemos API key
+openai_api_key = os.getenv("SINEKYS_OPENAI_API_KEY", "")
+client = OpenAI(api_key=openai_api_key) if openai_api_key else None
 MODEL = os.getenv("MODEL", "gpt-4o-mini") 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +86,15 @@ def safe_create_response(payload, carrera, max_retries=2):
     # ejercicio_sanitizado = normalize_text(ejercicio_enunciado, for_storage=True)
     system, user = build_prompt(carrera, ejercicio_enunciado)
     attempt = 0
+    
+    # Si no hay cliente OpenAI, retornar fallback inmediatamente
+    if not client:
+        logger.warning("OpenAI client not initialized (missing API key) for carrera=%s", carrera_sanitizada)
+        return {
+            "display_text": ejercicio_enunciado,
+            "hint": f"Contexto académico para {carrera_sanitizada}: este tipo de ejercicio es relevante en tu formación profesional."
+        }
+    
     while attempt < max_retries:
         try:
             attempt += 1
