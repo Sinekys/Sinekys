@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="bg-gray-100 min-h-screen">
+    <main class="bg-white max-w-5xl mx-auto mt-10 px-6 py-8 rounded-xl shadow-md">
+
+        <!-- ENCABEZADO -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">📊 Carga Masiva de Ejercicios</h1>
+                    <p class="text-gray-600 mt-2">Sube ejercicios desde un archivo Excel</p>
+                </div>
+                <a href="{% url 'profesor:dashboard' %}" 
+                   class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                    ← Volver al Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- MENSAJES -->
+        {% if messages %}
+        <div class="mb-6 space-y-3">
+            {% for message in messages %}
+            <div class="p-4 rounded-lg flex items-start gap-3 {% if message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-black{% elif message.tags == 'warning' %}bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700{% else %}bg-red-100 border-l-4 border-red-500 text-red-700{% endif %}">
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    {% if message.tags == 'success' %}
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    {% elif message.tags == 'warning' %}
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    {% else %}
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    {% endif %}
+                </svg>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- INSTRUCCIONES -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg mb-8">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-semibold text-black mb-3">📋 Instrucciones</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-black">
+                        <li>Selecciona la <strong>materia</strong> para la cual cargarás ejercicios</li>
+                        <li>Descarga la <strong>plantilla Excel</strong> haciendo clic en el botón verde</li>
+                        <li>Llena la plantilla con los datos de los ejercicios siguiendo el ejemplo</li>
+                        <li>Revisa las hojas "Instrucciones", "Unidades Disponibles" y "Tipos Disponibles"</li>
+                        <li>Guarda el archivo y súbelo usando el formulario</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORMULARIO -->
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+            <form method="POST" enctype="multipart/form-data" id="uploadForm" novalidate>
+                {% csrf_token %}
+
+                <!-- Selección de Materia -->
+                <div class="mb-6">
+                    <label for="id_materia" class="block mb-2 text-sm font-medium text-gray-700">
+                        {{ form.materia.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.materia }}
+                    {% if form.materia.errors %}
+                        {% for error in form.materia.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Botón Descargar Plantilla -->
+                <div class="mb-6">
+                    <button 
+                        type="button"
+                        id="btnDescargarPlantilla"
+                        class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        disabled
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span id="btnText">Descargar Plantilla Excel</span>
+                    </button>
+                    <p class="mt-2 text-sm text-gray-600 text-center" id="helperText">
+                        Primero selecciona una materia para descargar la plantilla
+                    </p>
+                </div>
+
+                <hr class="my-8 border-gray-200">
+
+                <!-- Subir Archivo -->
+                <div class="mb-6">
+                    <label for="id_archivo_excel" class="block mb-2 text-sm font-medium text-gray-700">
+                        {{ form.archivo_excel.label }} <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        {{ form.archivo_excel }}
+                    </div>
+                    {% if form.archivo_excel.help_text %}
+                    <p class="mt-2 text-sm text-gray-600 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="-20 0 70 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ form.archivo_excel.help_text }}
+                    </p>
+                    {% endif %}
+                    {% if form.archivo_excel.errors %}
+                        {% for error in form.archivo_excel.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button 
+                        type="submit"
+                        class="flex-1 px-6 py-3 bg-indigo-600 text-black rounded-lg hover:bg-indigo-700 transition font-medium flex items-center justify-center gap-2"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 30 20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        Subir y Procesar
+                    </button>
+                    <button 
+                        type="reset"
+                        class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium flex items-center justify-center gap-2"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Limpiar
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- INFO ADICIONAL -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-black p-6 rounded-xl shadow-lg">
+                <div class="text-4xl mb-2">📝</div>
+                <h4 class="font-semibold mb-2">Campos Obligatorios</h4>
+                <ul class="text-sm opacity-90 space-y-1">
+                    <li>• enunciado</li>
+                    <li>• solucion</li>
+                    <li>• dificultad</li>
+                    <li>• unidad_id</li>
+                </ul>
+            </div>
+            
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-black p-6 rounded-xl shadow-lg">
+                <div class="text-4xl mb-2">📊</div>
+                <h4 class="font-semibold mb-2">Validaciones</h4>
+                <ul class="text-sm opacity-90 space-y-1">
+                    <li>• Dificultad: -3 a 3</li>
+                    <li>• Discriminación: 0.01 a 2</li>
+                    <li>• Max 200 caracteres</li>
+                </ul>
+            </div>
+            
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-black p-6 rounded-xl shadow-lg">
+                <div class="text-4xl mb-2">⚡</div>
+                <h4 class="font-semibold mb-2">Límites</h4>
+                <ul class="text-sm opacity-90 space-y-1">
+                    <li>• Máximo 5MB</li>
+                    <li>• Formatos: .xlsx, .xls</li>
+                    <li>• Múltiples ejercicios</li>
+                </ul>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando página de carga de ejercicios');
+    
+    const materiaSelect = document.getElementById('id_materia');
+    const btnDescargar = document.getElementById('btnDescargarPlantilla');
+    const btnText = document.getElementById('btnText');
+    const helperText = document.getElementById('helperText');
+    const archivoInput = document.getElementById('id_archivo_excel');
+    
+    // Habilitar botón cuando se seleccione materia
+    materiaSelect.addEventListener('change', function() {
+        console.log('Materia seleccionada:', this.value);
+        
+        if (this.value) {
+            btnDescargar.disabled = false;
+            btnDescargar.classList.remove('disabled:bg-gray-300', 'disabled:cursor-not-allowed');
+            helperText.textContent = 'Haz clic para descargar la plantilla personalizada';
+            helperText.classList.add('text-green-600');
+        } else {
+            btnDescargar.disabled = true;
+            btnDescargar.classList.add('disabled:bg-gray-300', 'disabled:cursor-not-allowed');
+            helperText.textContent = 'Primero selecciona una materia para descargar la plantilla';
+            helperText.classList.remove('text-green-600');
+        }
+    });
+    
+    // Descargar plantilla
+    btnDescargar.addEventListener('click', function() {
+        const materiaId = materiaSelect.value;
+        
+        if (materiaId) {
+            console.log('Descargando plantilla para materia:', materiaId);
+            
+            // Cambiar texto del botón
+            const originalText = btnText.textContent;
+            btnText.textContent = 'Descargando...';
+            btnDescargar.disabled = true;
+            
+            // Crear URL y redirigir
+            const url = `{% url 'profesor:descargar_plantilla' %}?materia_id=${materiaId}`;
+            window.location.href = url;
+            
+            // Restaurar botón después de 2 segundos
+            setTimeout(() => {
+                btnText.textContent = originalText;
+                btnDescargar.disabled = false;
+            }, 2000);
+        } else {
+            alert('Por favor selecciona una materia primero');
+        }
+    });
+    
+    // Mostrar nombre del archivo seleccionado
+    if (archivoInput) {
+        archivoInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                console.log('Archivo seleccionado:', fileName);
+                
+                // Crear elemento para mostrar el nombre
+                let fileNameDisplay = document.getElementById('fileNameDisplay');
+                if (!fileNameDisplay) {
+                    fileNameDisplay = document.createElement('p');
+                    fileNameDisplay.id = 'fileNameDisplay';
+                    fileNameDisplay.className = 'mt-2 text-sm text-indigo-600 font-medium flex items-center gap-2';
+                    archivoInput.parentElement.appendChild(fileNameDisplay);
+                }
+                
+                fileNameDisplay.innerHTML = `
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd"/>
+                    </svg>
+                    ${fileName}
+                `;
+            }
+        });
+    }
+    
+    // Validación antes de enviar el formulario
+    const uploadForm = document.getElementById('uploadForm');
+    uploadForm.addEventListener('submit', function(e) {
+        const materia = materiaSelect.value;
+        const archivo = archivoInput.files[0];
+        
+        if (!materia) {
+            e.preventDefault();
+            alert('Por favor selecciona una materia');
+            materiaSelect.focus();
+            return false;
+        }
+        
+        if (!archivo) {
+            e.preventDefault();
+            alert('Por favor selecciona un archivo Excel');
+            archivoInput.focus();
+            return false;
+        }
+        
+        // Validar extensión
+        const validExtensions = ['.xlsx', '.xls'];
+        const fileExtension = archivo.name.substring(archivo.name.lastIndexOf('.')).toLowerCase();
+        
+        if (!validExtensions.includes(fileExtension)) {
+            e.preventDefault();
+            alert('Solo se permiten archivos .xlsx o .xls');
+            archivoInput.value = '';
+            return false;
+        }
+        
+        // Validar tamaño (5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (archivo.size > maxSize) {
+            e.preventDefault();
+            alert('El archivo no debe superar los 5MB');
+            archivoInput.value = '';
+            return false;
+        }
+        
+        console.log('✅ Formulario válido, enviando...');
+    });
+});
+</script>
+
+{% include "footer.html" %}
+{% endblock %}
