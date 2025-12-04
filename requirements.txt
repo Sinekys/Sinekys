@@ -50,3 +50,4 @@ tzdata==2025.2
 unicode==2.9
 Unidecode==1.4.0
 urllib3==2.5.0
+gunicorn
