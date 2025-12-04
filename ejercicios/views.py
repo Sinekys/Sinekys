@@ -11,6 +11,10 @@ from django.urls import reverse
 from usage.services import can_user_attempt, register_attempt
 
 
+
+
+
+import ast
 import json
 import re
 
@@ -45,6 +49,9 @@ from .mixins import (
     DiagnosticoCompletadoMixin,
     select_mode,
 )
+
+
+
 
 
 # Normalizar respuesta
@@ -555,61 +562,141 @@ class MatchMakingGroupView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
     def post(self,request):
         
         pass
+
+
+logger = logging.getLogger(__name__)
+
+def _parse_feedback_raw(raw_fb):
+    """
+    Convierte un feedback crudo (puede ser dict, JSON-string, o repr(dict)) a dict seguro.
+    Retorna (parsed_dict, error_str_or_None)
+    """
+    if raw_fb is None:
+        return {}, None
+
+    # Si ya es dict, devolvemos tal cual
+    if isinstance(raw_fb, dict):
+        return raw_fb, None
+
+    # Si es bytes -> decode
+    if isinstance(raw_fb, (bytes, bytearray)):
+        try:
+            raw_fb = raw_fb.decode('utf-8', errors='ignore')
+        except Exception:
+            raw_fb = str(raw_fb)
+
+    # Si es string, probamos JSON, luego ast.literal_eval, luego intento extraer entre llaves
+    if isinstance(raw_fb, str):
+        # Intento 1: JSON válido
+        try:
+            parsed = json.loads(raw_fb)
+            if isinstance(parsed, dict):
+                return parsed, None
+        except Exception:
+            pass
+
+        # Intento 2: literal_eval (parsea "{'a':1}" a dict)
+        try:
+            parsed = ast.literal_eval(raw_fb)
+            if isinstance(parsed, dict):
+                return parsed, None
+        except Exception:
+            pass
+
+        # Intento 3: extraer bloque {...} y reintentar JSON
+        start = raw_fb.find('{')
+        end = raw_fb.rfind('}') + 1
+        if start != -1 and end != -1 and end > start:
+            fragment = raw_fb[start:end]
+            try:
+                parsed = json.loads(fragment)
+                if isinstance(parsed, dict):
+                    return parsed, None
+            except Exception:
+                # como último recurso, intentamos literal_eval
+                try:
+                    parsed = ast.literal_eval(fragment)
+                    if isinstance(parsed, dict):
+                        return parsed, None
+                except Exception:
+                    pass
+
+    # Si nada funcionó, devolvemos {} y el raw para debugging
+    return {}, f"Could not parse feedback (type={type(raw_fb)}); returning empty dict."
+
+
     
-# No sé si voy a necesitar esta clase la verdad...
-# class ContinuarEjercicioGrupal(MatchMakingGroupView,DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
-    
-    
-    # GET /ejercicios/check/<int:intento_id>/
+
 
 @method_decorator(login_required, name='dispatch')
 class CheckAnswer(View):
-    def get(self,request, intento_uuid):
+    def get(self, request, intento_uuid):
         try:
             estudiante = request.user.estudiante
         except AttributeError:
             messages.error(request, "No tienes permiso para acceder a esta página")
             return redirect('')
-        
-        intento = get_object_or_404(Intento.objects.select_related("ejercicio","estudiante"), uuid=intento_uuid)
-        
+
+        intento = get_object_or_404(
+            Intento.objects.select_related("ejercicio", "estudiante"),
+            uuid=intento_uuid
+        )
+
         if intento.estudiante_id != estudiante.id and not request.user.is_staff:
             home_url = reverse('mainPage')
             html = (
-            '<!doctype html><html><head>'
-            f'<meta http-equiv="refresh" content="3;url={home_url}">'
-            '<meta charset="utf-8"></head><body>'
-            '<p>No tienes acceso a este intento. Serás redirigido a la página principal en 3 segundos.</p>'
-            f'<p>Si no, <a href="{home_url}">haz clic aquí</a>.</p>'
-            '</body></html>'
+                '<!doctype html><html><head>'
+                f'<meta http-equiv="refresh" content="3;url={home_url}">'
+                '<meta charset="utf-8"></head><body>'
+                '<p>No tienes acceso a este intento. Serás redirigido a la página principal en 3 segundos.</p>'
+                f'<p>Si no, <a href="{home_url}">haz clic aquí</a>.</p>'
+                '</body></html>'
             )
             return HttpResponseForbidden(html)
-        
+
         ejercicio = intento.ejercicio
-        
+
         es_correcto, puntos = evaluar_respuesta(intento.respuesta_estudiante, ejercicio.solucion)
 
         pasos_intento = list(intento.pasos.all().order_by('orden'))
-        
+
         pasos_correctos_qs = PasoEjercicio.objects.filter(ejercicio=ejercicio).order_by("orden")
         pasos_correctos = list(pasos_correctos_qs)
-        
-        feedback = Feedback.objects.filter(intento = intento).order_by("-fecha_feedback").first()
+
+        feedback = Feedback.objects.filter(intento=intento).order_by("-fecha_feedback").first()
         feedback_pasos = []
         if feedback:
-            feedback_pasos = list(FeedbackPasos.objects.filter(feedback=feedback).select_related("tipo_feedback").order_by("orden"))
-            
+            feedback_pasos = list(
+                FeedbackPasos.objects.filter(feedback=feedback).select_related("tipo_feedback").order_by("orden")
+            )
+
+        # --- Normalizar feedback para la plantilla ---
+        feedback_parsed = {}
+        feedback_parse_error = None
+        feedback_raw = None
+
+        if feedback:
+            # asumo que el campo se llama 'feedback' en el modelo; puede ser TextField o JSONField
+            feedback_raw = getattr(feedback, 'feedback', None)
+            parsed, err = _parse_feedback_raw(feedback_raw)
+            feedback_parsed = parsed or {}
+            feedback_parse_error = err
+
         contexto = {
             "intento": intento,
-            "ejercicio":ejercicio,
-            "es_correcto":es_correcto,
-            "puntos":puntos,
-            "pasos_intento":pasos_intento,
-            "pasos_correctos":pasos_correctos,
-            "feedback":feedback,
-            "feedback_pasos":feedback_pasos,
+            "ejercicio": ejercicio,
+            "es_correcto": es_correcto,
+            "puntos": puntos,
+            "pasos_intento": pasos_intento,
+            "pasos_correctos": pasos_correctos,
+            "feedback": feedback,                  # objeto DB (por si lo necesitas en template)
+            "feedback_parsed": feedback_parsed,    # dict seguro para iterar en template
+            "feedback_raw": feedback_raw,          # raw (debug)
+            "feedback_parse_error": feedback_parse_error,
+            "feedback_pasos": feedback_pasos,
         }
-        
+
+        # JSON endpoint (útil para debugging o front-end async)
         if request.GET.get("json"):
             return JsonResponse({
                 "success": True,
@@ -618,7 +705,8 @@ class CheckAnswer(View):
                 "puntos": puntos,
                 "pasos_intento": [{"orden": p.orden, "contenido": p.contenido} for p in pasos_intento],
                 "pasos_correctos": [{"orden": p.orden, "contenido": p.contenido} for p in pasos_correctos],
-                "feedback": feedback.feedback if feedback else None,
+                "feedback_raw": feedback_raw,
+                "feedback_parsed": feedback_parsed,
                 "feedback_pasos": [
                     {
                         "orden": fp.orden,
@@ -627,7 +715,6 @@ class CheckAnswer(View):
                     } for fp in feedback_pasos
                 ]
             })
-            
 
         # Render HTML
         return render(request, "ejercicios/check-respuesta.html", contexto)

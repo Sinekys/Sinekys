@@ -60,7 +60,7 @@ def build_prompt(carrera, ejercicio_enunciado):
 
             REQUISITOS:
             - El contexto debe describir un escenario plausible en esa carrera donde el ejercicio importa.
-            - El lenguaje debe ser del nivel “estudiante universitario de la carrera” (no de escuela secundaria) y motivador (“en tu futura práctica profesional…”).
+            - El lenguaje debe ser del nivel “estudiante universitario de la carrera” (no de escuela secundaria) igual como si estuviera en un entorno real y se le está pidiendo el cálculo de algo.
             - El JSON debe tener exactamente esos campos, sin texto adicional, comentarios, explicaciones.
 
             """

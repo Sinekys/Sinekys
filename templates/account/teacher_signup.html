@@ -162,7 +162,7 @@
 
 
 
-            <!-- Mostrar errores globales / no_field_errors -->
+            {% comment %} <!-- Mostrar errores globales / no_field_errors -->
             {% if form.non_field_errors %}
             <div class="errorlist">
                 {% for err in form.non_field_errors %}
@@ -187,7 +187,7 @@
                 {% endfor %}
                 </ul>
             </div>
-            {% endif %}
+            {% endif %} {% endcomment %}
 
 
 

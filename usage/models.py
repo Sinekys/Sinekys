@@ -7,7 +7,7 @@ class DailyQuota(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date = models.DateField()
     attempts_count = models.PositiveIntegerField(default=0)
-    messages_count = models.PositiveIntegerField(default=0)  # EXISTE EN TU DB
+    messages_count = models.PositiveIntegerField(default=0)  
 
     class Meta:
         unique_together = ('user', 'date')

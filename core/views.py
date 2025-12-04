@@ -24,69 +24,60 @@ def home_view(request):
         from ejercicios.models import Intento, Feedback
         from django.db.models import Prefetch
         from django.conf import settings
-        
+
         # Obtener configuración
         max_items = getattr(settings, 'DIAGNOSTICO_MAX_EJERCICIOS', 30)
-        
+
         # Determinar si el diagnóstico está completado
         diagnostico_completado = False
         diagnostico = None
-        
+
         try:
             diagnostico = profile.diagnostico
             if diagnostico.finalizado:
                 diagnostico_completado = True
         except Diagnostico.DoesNotExist:
-            # No tiene diagnóstico, crear uno si es necesario
+            diagnostico = None
+            diagnostico_completado = False
+            # opcional: crear/validar diagnostico si ya tiene intentos
             if Intento.objects.filter(estudiante=profile).exists():
-                from accounts.services import obtener_o_validar_diagnostico
-                diagnostico = obtener_o_validar_diagnostico(profile)
-        
+                try:
+                    from accounts.services import obtener_o_validar_diagnostico
+                    diagnostico = obtener_o_validar_diagnostico(profile)
+                except Exception as e:
+                    logger.exception("Error al obtener/crear diagnóstico: %s", e)
+
+        # Verificar si tiene suficientes ejercicios para considerar completado (si aún no está marcado)
         if not diagnostico_completado:
-            # Verificar si tiene suficientes ejercicios para considerar completado
             num_intentos = Intento.objects.filter(estudiante=profile).count()
-            min_ejercicios = max(10, int(max_items * 0.3))  # Al menos 10 o 30% del máximo
-            
+            min_ejercicios = max(10, int(max_items * 0.3))
             if num_intentos >= min_ejercicios:
                 diagnostico_completado = True
                 if diagnostico and not diagnostico.finalizado:
                     diagnostico.finalizado = True
                     diagnostico.save()
-        
-        
+
+        # Prefetch de feedbacks
         feedback_prefetch = Prefetch(
             'feedback_set',
             queryset=Feedback.objects.order_by('-fecha_feedback'),
             to_attr='feedbacks'
         )
-        ultimos = Intento.objects.filter(
-            estudiante=profile
-        ).select_related(
-            'ejercicio'
-        ).prefetch_related(
-            feedback_prefetch
-        ).order_by(
-            '-fecha_intento'
-        )[:10]
-        
+
+        # siempre cargamos los últimos intentos (aunque sean 0) para el historial
+        ultimos = (
+            Intento.objects.filter(estudiante=profile)
+            .select_related('ejercicio')
+            .prefetch_related(feedback_prefetch)
+            .order_by('-fecha_intento')[:15]
+        )
+
         context = {
             'is_estudiante': True,
             'diagnostico_completado': diagnostico_completado,
-            'ultimos': ultimos
+            'ultimos': ultimos,
         }
-        return render(request, 'main_page.html', context)
-    
-    elif user_type == 'docente':
-        # Obtener datos específicos para docentes
-        context = {
-            'is_docente': True,
-            # ... datos específicos para docentes ...
-        }
-        return render(request, 'docente/main_page.html', context)
-    
-    else:
-        # Usuario genérico (debería ser raro aquí por el @login_required)
-        return redirect('index')
+    return render(request, 'main_page.html', context)
     
     
 def index_view(request):

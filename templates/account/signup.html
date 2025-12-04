@@ -1,71 +1,102 @@
 {% extends "account/base_entrance.html" %}
-{% load allauth i18n %}
+{% load allauth i18n static %}
+
 {% block head_title %}
-    {% trans "Signup" %}
+    {% trans "Registro de Estudiante" %}
 {% endblock head_title %}
+
 {% block content %}
-{% load static %}
 
-{% if not SOCIALACCOUNT_ONLY %}
-    {% setvar link %}
-        <a href="{{ login_url }}" class="text-orange-400 hover:text-orange-300 font-semibold transition duration-200">
-    {% endsetvar %}
-    {% setvar end_link %}
-        </a>
-    {% endsetvar %}
-    
-    <div class="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-8">
-        
-        <div class="max-w-md w-full p-8 bg-gray-800 text-white rounded-xl shadow-2xl border border-gray-700">
-            
-            <h1 class="text-3xl font-bold mb-6 text-center text-white">
-                {% trans "Registrarse" %}
-            </h1>
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<style>
+  /* (mantén tu CSS, lo recorté aquí por brevedad si ya lo tienes) */
+  body { background-color:#0d0d0d; color:#fff; }
+  .register-container { max-width:30rem; margin:2.5rem auto; padding:2rem; background:#fff; color:#1a1a1a; border-radius:.75rem; }
+  .form-field { margin-bottom:1rem; text-align:left; }
+  .form-field label { display:block; margin-bottom:.5rem; font-weight:bold; color:#333; }
+  .form-field input, .form-field select { width:100%; padding:.75rem; border:1px solid #ddd; border-radius:.25rem; background:white; color:#333; }
+  .warning-text{ color:#e74c3c; font-size:.85rem; margin-top:.25rem; }
+  .help-text{ font-size:.85rem; color:#666; }
+  .login-link{ display:inline-block; margin-top:1rem; padding:.75rem; background:#3498db; color:#fff; border-radius:.5rem; text-decoration:none; }
+</style>
 
-            <p class="mb-6 text-sm text-center text-gray-400">
-                {% blocktrans %}¿Ya tienes cuenta? Entonces haz clic en {{ link }}Iniciar sesión{{ end_link }}.{% endblocktrans %}
-            </p>
-            
-            {% url 'account_signup' as action_url %}
-            
-            {% element form form=form method="post" action=action_url tags="entrance,signup" %}
-                {% slot body %}
-                    {% csrf_token %}
-                    
-                    <div class="space-y-4 mb-6">
-                        {% element fields form=form unlabeled=True %}
-                        {% endelement %}
-                    </div>
-                    
-                    {% if redirect_field %}
-                        {{ redirect_field }}
-                    {% endif %}
-                {% endslot %}
-                
-                {% slot actions %}
-                    {% element button type="submit" tags="prominent,signup" class="w-full bg-orange-500 text-black font-extrabold text-lg py-3 rounded-lg hover:bg-orange-400 transition duration-200 shadow-md" %}
-                        Registrarse
-                    {% endelement %}
-                {% endslot %}
-            {% endelement %}
-        </div>
+<div class="register-container">
+  <h2>{% trans "Registro de Estudiante" %}</h2>
+  <p class="help-text">{% trans "Completa este formulario para crear tu cuenta de estudiante." %}</p>
+
+  {% url 'account_signup' as action_url %}
+  <form method="post" action="{{ action_url }}">
+    {% csrf_token %}
+    <input type="hidden" name="signup_type" value="student">
+
+    <!-- Nombre -->
+    <div class="form-field">
+      <label for="{{ form.first_name.id_for_label }}">{% trans "Nombre" %}</label>
+      {{ form.first_name }}
+      {% if form.first_name.errors %}
+        <div class="warning-text">{{ form.first_name.errors }}</div>
+      {% endif %}
     </div>
+
+    <!-- Apellido -->
+    <div class="form-field">
+      <label for="{{ form.last_name.id_for_label }}">{% trans "Apellido" %}</label>
+      {{ form.last_name }}
+      {% if form.last_name.errors %}
+        <div class="warning-text">{{ form.last_name.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- CARRERA (importante: el campo en el form se llama `career`) -->
+    <div class="form-field">
+      <label for="{{ form.career.id_for_label }}">{% trans "Carrera" %} *</label>
+      {{ form.career }}
+      {% if form.career.errors %}
+        <div class="warning-text">{{ form.career.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Email -->
+    <div class="form-field">
+      <label for="{{ form.email.id_for_label }}">{% trans "Correo electrónico" %} *</label>
+      {{ form.email }}
+      {% if form.email.errors %}
+        <div class="warning-text">{{ form.email.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Password -->
+    <div class="form-field">
+      <label for="{{ form.password1.id_for_label }}">{% trans "Contraseña" %} *</label>
+      {{ form.password1 }}
+      {% if form.password1.errors %}
+        <div class="warning-text">{{ form.password1.errors }}</div>
+      {% endif %}
+      {% if form.password1.help_text %}
+        <div class="help-text">{{ form.password1.help_text }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-field">
+      <label for="{{ form.password2.id_for_label }}">{% trans "Confirmar contraseña" %} *</label>
+      {{ form.password2 }}
+      {% if form.password2.errors %}
+        <div class="warning-text">{{ form.password2.errors }}</div>
+      {% endif %}
+    </div>
+
+    {{ redirect_field }}
+
+    <button type="submit" class="prominent login button" style="padding:.75rem 1.5rem; background:#3498db; color:white; border:none; border-radius:.5rem;">
+      {% trans "Registrarse" %}
+    </button>
+  </form>
+
+  <a href="{{ login_url }}" class="login-link">{% trans "¿Ya tienes cuenta? Inicia sesión" %}</a>
+</div>
+
+{% if SOCIALACCOUNT_ENABLED %}
+  {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
 {% endif %}
 
-<div class="flex items-center justify-center px-4 pb-8">
-    <div class="max-w-md w-full p-8 bg-gray-800 text-white rounded-xl shadow-2xl border border-gray-700 mt-4">
-        {% if PASSKEY_SIGNUP_ENABLED %}
-            {% element hr class="my-6 border-gray-600" %}
-            {% endelement %}
-            
-            {% element button href=signup_by_passkey_url tags="prominent,signup,outline,primary" class="w-full border-2 border-orange-500 text-orange-400 py-3 rounded-lg hover:bg-orange-500 hover:text-black transition duration-200 font-semibold" %}
-                {% trans "Sign up using a passkey" %}
-            {% endelement %}
-        {% endif %}
-        
-        {% if SOCIALACCOUNT_ENABLED %}
-            {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
-        {% endif %}
-    </div>
-</div>
-{% endblock content %}
+{% endblock %}

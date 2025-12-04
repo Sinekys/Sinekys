@@ -30,7 +30,7 @@ def can_user_attempt(user):
 
     # Si NO tiene suscripción => límite FREE = 3 intentos por día
     if subscription is None:
-        limit = 3
+        limit = 50
     else:
         limit = PLAN_LIMITS.get(subscription.plan_type, 3)
 
