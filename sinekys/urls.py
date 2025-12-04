@@ -19,10 +19,20 @@ from django.urls import path, include
 from accounts import urls as accounts_urls
 from core import urls as core_urls
 from ejercicios import urls as ejercicios_urls
+from django.conf import settings
+from django.conf.urls.static import static 
+from core.views import home_view
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(accounts_urls)),
+
+    # path('', home_view, name='mainPage'),
+    path('', include(core_urls)),
+    # 
     path('accounts/', include('allauth.urls')),
-    path('core/', include(core_urls)),  
-    path('ejercicios/', include(ejercicios_urls)),
-]
+    path('accounts/', include(accounts_urls)),
+    path('ejercicio/', include(ejercicios_urls)),
+    path('api/payments/', include('subscriptions.urls')), 
+    path('profesor/', include('profesor.urls', namespace='profesor')),
+
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+

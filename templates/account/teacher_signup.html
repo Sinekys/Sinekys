@@ -1,0 +1,350 @@
+{% extends "account/base_entrance.html" %}
+{% load allauth i18n %}
+{% block head_title %}
+    {% trans "Registro de Docente" %}
+{% endblock head_title %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<style>
+    body {
+        background-color: #0d0d0d;
+        color: #fff;
+    }
+    .register-container {
+        max-width: 30rem;
+        margin: 2.5rem auto;
+        padding: 2rem 1.5rem;
+        background: #fff;
+        color: #1a1a1a;
+        border-radius: 0.75rem;
+        box-shadow: 0 0.125rem 1rem rgba(0,0,0,0.5);
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .student-link {
+        margin-top: 1.5rem;
+        padding: 0.75rem;
+        background: #2ecc71;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.3s;
+    }
+    
+    .student-link:hover {
+        background: #27ae60;
+    }
+    
+    .form-field {
+        margin-bottom: 1rem;
+        text-align: left;
+        width: 100%;
+    }
+    
+    .form-field label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-field input, 
+    .form-field select, 
+    .form-field textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+        font-size: 1rem;
+    }
+    
+    .file-input-container {
+        border: 2px dashed #3498db;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        background-color: #f8f9fa;
+        text-align: center;
+    }
+    
+    .file-input-container:hover {
+        border-color: #2980b9;
+        background-color: #e8f4ff;
+    }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.2rem;
+    }
+    
+    .warning-text {
+        color: #e74c3c;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Corrección para los checkboxes de especialidades */
+    .checkbox-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: flex-start; /* Alinea siempre a la izquierda */
+    }
+
+    .checkbox-item input {
+        margin: 0;
+        flex-shrink: 0; /* Impide que el checkbox se contraiga */
+    }
+
+    .checkbox-item label {
+        margin: 0;
+        flex-grow: 1; /* Permite que el texto se expanda */
+        text-align: left; /* Alinea el texto a la izquierda */
+    }
+
+    .password-container {
+        position: relative;
+    }
+    
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #3498db;
+    }
+
+    .errorlist {
+        color: #e74c3c;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+</style>
+<div class="register-container">
+    <h2>{% trans "Registro de Docente" %}</h2>
+    <p class="help-text">
+        {% trans "Completa el formulario para registrar tu cuenta como docente. Se requiere subir un certificado o título que acredite tu formación profesional." %}
+    </p>
+    
+    {% if not SOCIALACCOUNT_ONLY %}
+        {% url 'teacher_signup' as action_url %}
+        <form method="post" action="{{ action_url }}" enctype="multipart/form-data" class="signup-form">
+            {% csrf_token %}
+            <input type="hidden" name="signup_type" value="teacher">
+
+
+
+
+
+
+            {% comment %} <!-- Mostrar errores globales / no_field_errors -->
+            {% if form.non_field_errors %}
+            <div class="errorlist">
+                {% for err in form.non_field_errors %}
+                <div>{{ err }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {# Mostrar todos los errores para debug (opcional, quitar en producción) #}
+            {% if form.errors %}
+            <div class="errorlist">
+                <strong>Errores del formulario:</strong>
+                <ul>
+                {% for field, errs in form.errors.items %}
+                    <li><strong>{{ field }}:</strong>
+                    <ul>
+                        {% for e in errs %}
+                        <li>{{ e }}</li>
+                        {% endfor %}
+                    </ul>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %} {% endcomment %}
+
+
+
+
+
+
+            <!-- Campos de allauth (email y contraseña) -->
+            <div class="form-field">
+                <label for="id_email">{% trans "Correo electrónico" %} *</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="warning-text">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-field">
+                <label for="id_password1">{% trans "Contraseña" %} *</label>
+                <div class="password-container">
+                    {{ form.password1 }}
+                    <button type="button" class="toggle-password" id="toggle-password1">Mostrar</button>
+                </div>
+                {% if form.password1.errors %}
+                    <div class="warning-text">{{ form.password1.errors }}</div>
+                {% endif %}
+                {% if form.password1.help_text %}
+                    <div class="help-text">{{ form.password1.help_text }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-field">
+                <label for="id_password2">{% trans "Confirmar contraseña" %} *</label>
+                <div class="password-container">
+                    {{ form.password2 }}
+                    <button type="button" class="toggle-password" id="toggle-password2">Mostrar</button>
+                </div>
+                {% if form.password2.errors %}
+                    <div class="warning-text">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Campos personalizados -->
+            <div class="form-field">
+                <label for="id_first_name">{% trans "Nombre" %} *</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div class="warning-text">{{ form.first_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-field">
+                <label for="id_last_name">{% trans "Apellido" %} *</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <div class="warning-text">{{ form.last_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-field">
+                <label>{% trans "Especialidades" %} *</label>
+                <div class="checkbox-container">
+                    {% for especialidad in form.especialidades %}
+                        <div class="checkbox-item">
+                            {{ especialidad.tag }}
+                            <label for="{{ especialidad.id_for_label }}">{{ especialidad.choice_label }}</label>
+                        </div>
+                    {% empty %}
+                        <p>{% trans "No hay especialidades disponibles en este momento." %}</p>
+                    {% endfor %}
+                </div>
+                {% if form.especialidades.errors %}
+                    <div class="warning-text">{{ form.especialidades.errors }}</div>
+                {% endif %}
+                <div class="help-text">
+                    {% trans "Selecciona una o varias áreas de especialización docente." %}
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.biography.id_for_label }}">{% trans "Biografía" %}</label>
+                {{ form.biography }}
+                {% if form.biography.errors %}
+                    <div class="warning-text">{{ form.biography.errors }}</div>
+                {% endif %}
+                <div class="help-text">
+                    {% trans "Breve descripción de tu experiencia docente y profesional (máximo 500 caracteres)" %}
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <label for="id_certification_file">{% trans "Certificado o título" %} *</label>
+                <div class="file-input-container">
+                    {{ form.certification_file }}
+                </div>
+                {% if form.certification_file.errors %}
+                    <div class="warning-text">{{ form.certification_file.errors }}</div>
+                {% endif %}
+                <div class="help-text">
+                    {% trans "Formatos aceptados: PDF, JPG, PNG (máximo 5MB)" %}
+                </div>
+                <div class="help-text">
+                    {% trans "Sube un documento que acredite tu formación como docente. Será revisado por el equipo administrativo." %}
+                </div>
+            </div>
+            
+            {{ redirect_field }}
+            
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="prominent login button" style="padding: 0.75rem 1.5rem; background: #3498db; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                    {% trans "Registrarse como docente" %}
+                </button>
+            </div>
+        </form>
+        
+        <!-- Botón para estudiantes -->
+        <a href="{% url 'account_signup' %}" class="student-link">
+            {% trans "¿Eres estudiante? Regístrate aquí" %}
+        </a>
+    {% endif %}
+</div>
+
+{% if SOCIALACCOUNT_ENABLED %}
+    {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.signup-form');
+    const fileInput = document.getElementById('id_certification_file');
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            if (fileName) {
+                const fileContainer = e.target.closest('.file-input-container');
+                fileContainer.style.borderColor = '#2ecc71';
+            }
+        });
+    }
+    
+    // Funcionalidad para mostrar/ocultar contraseña
+    function togglePasswordVisibility(inputId, buttonId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleButton = document.getElementById(buttonId);
+        
+        if (passwordInput && toggleButton) {
+            let isPasswordVisible = false;
+            toggleButton.addEventListener('click', function() {
+                isPasswordVisible = !isPasswordVisible;
+                passwordInput.type = isPasswordVisible ? 'text' : 'password';
+                toggleButton.textContent = isPasswordVisible ? 'Ocultar' : 'Mostrar';
+            });
+        }
+    }
+    
+    // Configurar botones de mostrar/ocultar contraseña
+    togglePasswordVisibility('id_password1', 'toggle-password1');
+    togglePasswordVisibility('id_password2', 'toggle-password2');
+});
+</script>
+{% endblock %}

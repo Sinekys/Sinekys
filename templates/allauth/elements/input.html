@@ -1,0 +1,18 @@
+{% load allauth %}
+
+<input class="w-full p-3 rounded-lg border border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition duration-200"
+    name="{{ name }}"
+    id="{{ id }}"
+    {% if type %}type="{{ type }}"{% endif %}
+    {% if value %}value="{{ value }}"{% endif %}
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if required %}required{% endif %}
+    {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+    {% if autofocus %}autofocus{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if inputmode %}inputmode="{{ inputmode }}"{% endif %}
+    {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+    {% if minlength %}minlength="{{ minlength }}"{% endif %}
+    {% if pattern %}pattern="{{ pattern }}"{% endif %}
+    {% if readonly %}readonly{% endif %}
+    {% if size %}size="{{ size }}"{% endif %}>

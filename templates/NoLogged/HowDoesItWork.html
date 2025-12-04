@@ -1,13 +1,88 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}¿Cómo funciona? - Sinekys{% endblock %}
+
 {% block content %}
-<h1> ¿Cómo funciona? </h1>
-<p>Mediante un examen de diagnóstico...</p>
 
-<h2> Examen de diagnóstico </h2>
+<div class="bg-white text-gray-900 min-h-screen"> 
+    <div class="container max-w-6xl mx-auto py-16 md:py-24 px-4 sm:px-6 lg:px-8">
 
+        <section class="text-center mb-16">
+            <p class="text-orange-600 text-lg font-semibold uppercase tracking-wider mb-3">Metodología Sinekys</p>
+            <h1 class="text-5xl md:text-6xl font-extrabold text-black mb-4 leading-tight">
+                El Camino a la Maestría Matemática
+            </h1>
+            <p class="text-xl text-gray-700 max-w-4xl mx-auto">
+                A través de un proceso inteligente y adaptativo, transformamos tu curva de aprendizaje para que domines cada concepto.
+            </p>
+        </section>
 
-<h2> Nivelación </h2>
+        <div class="grid grid-cols-1 gap-12">
 
-{% endblock%}
+            <div class="bg-gray-900 text-white p-8 md:p-12 rounded-3xl shadow-2xl border-4 border-orange-400">
+                <div class="flex items-start space-x-6 md:space-x-10">
+                    <div class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-orange-400 rounded-full shadow-lg">
+                        <i class="fas fa-search-dollar text-3xl md:text-4xl text-black font-extrabold"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-orange-400 mb-2">
+                            1. Examen de Diagnóstico
+                        </h2>
+                        <p class="text-lg text-gray-300 leading-relaxed mb-4">
+                            Mediante un **examen de diagnóstico riguroso**, nuestra IA evalúa tu **nivel inicial** de conocimientos. A partir de esta línea base precisa, determinamos exactamente dónde comenzar tu ruta de estudio personalizada.
+                        </p>
+                        <ul class="list-disc list-inside text-gray-400 space-y-1 ml-4 text-base">
+                            <li>Identificación de fortalezas y debilidades.</li>
+                            <li>Evaluación específica según tu área de estudios.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-black text-white p-8 md:p-12 rounded-3xl shadow-2xl border-4 border-yellow-300">
+                <div class="flex items-start space-x-6 md:space-x-10">
+                    <div class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-yellow-300 rounded-full shadow-lg">
+                        <i class="fas fa-cogs text-3xl md:text-4xl text-black font-extrabold"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-yellow-300 mb-2">
+                            2. Nivelación y Adaptación
+                        </h2>
+                        <p class="text-lg text-gray-300 leading-relaxed mb-4">
+                            Una vez conocido tu nivel, deja todo en nuestras manos. La IA de Sinekys se encarga de **nivelar tus capacidades matemáticas** mediante una ruta que refuerza los conceptos débiles primero, para luego avanzar de forma lógica. Nuestro objetivo es que **seas el número 1 en clase**.
+                        </p>
+                        <ul class="list-disc list-inside text-gray-400 space-y-1 ml-4 text-base">
+                            <li>Ejercicios y material complementario adaptado 100%.</li>
+                            <li>Progresión asegurada para el dominio de todos los conceptos.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 text-white p-8 md:p-12 rounded-3xl shadow-2xl border-4 border-orange-400">
+                <div class="flex items-start space-x-6 md:space-x-10">
+                    <div class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-orange-400 rounded-full shadow-lg">
+                        <i class="fas fa-user-graduate text-3xl md:text-4xl text-black font-extrabold"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-orange-400 mb-2">
+                            3. Maestría con Profesor Personalizado
+                        </h2>
+                        <p class="text-lg text-gray-300 leading-relaxed mb-4">
+                            Tendrás a tu disposición un **profesor inteligente las 24 horas del día**. Esta herramienta no tiene límites de horario y es ideal para quienes retoman sus estudios o necesitan flexibilidad. **Garantizamos que entiendas todos los conceptos** y alcances la maestría en la materia.
+                        </p>
+                        <ul class="list-disc list-inside text-gray-400 space-y-1 ml-4 text-base">
+                            <li>Soporte 24/7 sin barreras de tiempo.</li>
+                            <li>Dominio conceptual completo antes de avanzar.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% include "footer.html" %}
+{% endblock %}

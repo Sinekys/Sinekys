@@ -1,0 +1,31 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Sinekys{% endblock %}</title>
+
+  <!-- Fuente Roboto -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+  
+  <link rel="icon" type="image/png" href="{% static 'images/SinekysLogo48x48.png' %}">
+
+  <!-- Tailwind CSS -->
+  {% tailwind_css %}
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-900 text-white font-roboto m-0">
+
+  {# Contenedor principal: dejamos todo dentro de este block #}
+  <main class="min-h-screen">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

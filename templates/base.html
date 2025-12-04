@@ -1,96 +1,404 @@
-{% load static%}
+{% load static tailwind_tags %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Document{% endblock %}</title>
-    <!-- Google Fonts: Roboto -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <style>
-        body {
-            font-family: 'Roboto', Arial, Helvetica, sans-serif;
-            background: #0d0d0d;
-            color: #fff;
-            width: 100%;
-            margin: 0;
-        }
-        
-    </style>
-    {% block extra_head %}{% endblock %}
-</head>
-<body>
-    <header style="color: white; display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: #0d0d0d;">
-        {% if request.user.is_anonymous %}
-        <nav style="width: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <ul style="list-style: none; display: flex; gap: 5vh; margin: 0; padding: 0;">
-                    <li style="margin-right: auto;"><a style="color: white; text-decoration: none;" href="{% url 'index' %}"><strong>SINEKYS</strong></a></li>
-                    <li><a href="{% url 'goals' %}" style="color: white; text-decoration: none;">Nuestros objetivos</a></li>
-                    <li><a href="{% url 'about' %}" style="color: white; text-decoration: none;">Sobre nosotros</a></li>
-                    <li><a href="{% url 'how_does_it_work' %}" style="color: white; text-decoration: none;">¿Cómo funciona?</a></li>
-                </ul>
-                <div style="display: flex; gap: 2vh;">
-                    <p style="margin: 0;"><a href="{% url 'account_login' %}" style="color: white; text-decoration: none;">Iniciar sesión</a></p>
-                    <p style="margin: 0;"><a href="{% url 'account_signup' %}" style="color: white; text-decoration: none;">Registrarse</a></p>
-                </div>
-            </div>
-        </nav>
-        <style>
-        @media (max-width: 768px) {
-            nav > div {
-                flex-direction: column;
-                align-items: flex-start !important;
-            }
-            nav ul {
-                flex-direction: column;
-                gap: 2vh !important;
-            }
-            nav div > div {
-                margin-top: 1em;
-                gap: 1vh !important;
-            }
-        }
-        </style>
-        {% else %}
-        <nav style="width: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <ul style="list-style: none; display: flex; gap: 5vh; margin: 0; padding: 0;">
-                    <li style="margin-right: auto;"><a href="{% url 'index' %}" style="color: white; text-decoration: none;"><strong>Menú</strong></a></li>
-                    <li><a href="{% url 'goals' %}" style="color: white; text-decoration: none;">Perfil</a></li>
-                    <li><a href="{% url 'about' %}" style="color: white; text-decoration: none;">Progreso</a></li>
-                    <li><a href="{% url 'how_does_it_work' %}" style="color: white; text-decoration: none;">Prueba de diagnóstico</a></li>
-                </ul>
-                <div style="display: flex; gap: 2vh; align-items: center;">
-                    <span style="margin: 0;">Bienvenid@, {{ request.user.username }}!</span>
-                    <p style="margin: 0;"><a href="{% url 'account_logout' %}" style="color: white; text-decoration: none;">Cerrar sesión</a></p>
-                </div>
-            </div>
-        </nav>
-        <style>
-        @media (max-width: 768px) {
-            nav > div {
-                flex-direction: column;
-                align-items: flex-start !important;
-            }
-            nav ul {
-                flex-direction: column;
-                gap: 2vh !important;
-            }
-            nav div > div {
-                margin-top: 1em;
-                gap: 1vh !important;
-            }
-        }
-        </style>
-        {% endif %}
-        
+    <title>{% block title %}Sinekys - Plataforma Educativa{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/SinekysLogo48x48.png' %}">
 
+    <!-- Fuente Roboto -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind -->
+    {% tailwind_css %}
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    {% block extra_head %}{% endblock %}
+    
+    <style>
+        /* Animaciones suaves para dropdowns */
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
         
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        /* Rotación del ícono */
+        .dropdown-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .dropdown-icon.active {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-white font-roboto m-0">
+
+    <!-- HEADER -->
+    <header class="bg-black text-white border-b border-gray-700 sticky top-0 z-50 shadow-lg">
+        <nav class="w-full max-w-7xl mx-auto px-4 py-4">
+            
+            <div class="flex justify-between items-center">
+
+                <!-- Logo -->
+                <a href="{% url 'index' %}"
+                   class="text-2xl font-bold text-orange-500 hover:text-orange-400 transition duration-300">
+                    {% if request.user.is_anonymous %}
+                        <i class="fas fa-graduation-cap mr-2"></i>SINEKYS
+                    {% else %}
+                        <i class="fas fa-home mr-2"></i>SINEKYS
+                    {% endif %}
+                </a>
+
+                <!-- Botón hamburguesa MÓVIL -->
+                <button id="menu-toggle" class="md:hidden text-2xl cursor-pointer hover:text-orange-500 transition">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <!-- NAV DESKTOP -->
+                <ul class="hidden md:flex items-center space-x-6 m-0 p-0">
+
+                    {% if request.user.is_anonymous %}
+                        <li>
+                            <a href="{% url 'goals' %}" 
+                               class="hover:text-orange-500 transition duration-300 flex items-center gap-2">
+                                <i class="fas fa-bullseye"></i>
+                                Objetivos
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'about' %}" 
+                               class="hover:text-orange-500 transition duration-300 flex items-center gap-2">
+                                <i class="fas fa-users"></i>
+                                Nosotros
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'how_does_it_work' %}" 
+                               class="hover:text-orange-500 transition duration-300 flex items-center gap-2">
+                                <i class="fas fa-question-circle"></i>
+                                ¿Cómo funciona?
+                            </a>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="{% url 'profile' %}" 
+                               class="hover:text-orange-500 transition duration-300 flex items-center gap-2">
+                                <i class="fas fa-user-circle"></i>
+                                Perfil
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'progress' %}" 
+                               class="hover:text-orange-500 transition duration-300 flex items-center gap-2">
+                                <i class="fas fa-chart-line"></i>
+                                Progreso
+                            </a>
+                        </li>
+                        <li>
+                            <button id="btn-diagnostico"
+                                class="underline hover:text-orange-500 transition duration-300 flex items-center gap-2">
+                                <i class="fas fa-clipboard-check"></i>
+                                Diagnóstico
+                            </button>
+                        </li>
+
+                        <!-- MENÚ PROFESOR (DESKTOP) - Solo si rol_id == 1 -->
+                        {% if request.user.rol_id == 1 %}
+                        <li class="relative">
+                            <button id="profesor-toggle-desktop" 
+                                    class="flex items-center space-x-2 hover:text-orange-500 transition duration-300 px-3 py-2 rounded-lg hover:bg-gray-800">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>Profesor</span>
+                                <i class="fas fa-chevron-down text-xs dropdown-icon" id="profesor-icon-desktop"></i>
+                            </button>
+                            
+                            <!-- Dropdown Desktop -->
+                            <div id="profesor-dropdown-desktop" 
+                                 class="dropdown-menu absolute left-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-2xl border border-gray-700 overflow-hidden">
+                                <a href="{% url 'profesor:dashboard' %}" 
+                                   class="flex items-center px-4 py-3 hover:bg-gray-700 transition duration-200 group">
+                                    <i class="fas fa-chart-bar w-5 text-indigo-400 group-hover:text-indigo-300"></i>
+                                    <div class="ml-3">
+                                        <div class="font-medium">Dashboard</div>
+                                        <div class="text-xs text-gray-400">Métricas y análisis</div>
+                                    </div>
+                                </a>
+                                <div class="border-t border-gray-700"></div>
+                                <a href="{% url 'profesor:upload_ejercicios' %}" 
+                                   class="flex items-center px-4 py-3 hover:bg-gray-700 transition duration-200 group">
+                                    <i class="fas fa-file-upload w-5 text-green-400 group-hover:text-green-300"></i>
+                                    <div class="ml-3">
+                                        <div class="font-medium">Carga Masiva</div>
+                                        <div class="text-xs text-gray-400">Subir ejercicios Excel</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        {% endif %}
+                    {% endif %}
+
+                    <li>
+                        <a href="{% url 'pricing' %}" 
+                           class="hover:text-orange-500 transition duration-300 flex items-center gap-2">
+                            <i class="fas fa-tags"></i>
+                            Pricing
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- AUTH DESKTOP -->
+                <div class="hidden md:flex items-center space-x-4">
+
+                    {% if request.user.is_anonymous %}
+                        <a href="{% url 'account_login' %}" 
+                           class="hover:text-orange-500 transition duration-300 flex items-center gap-2">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Iniciar sesión
+                        </a>
+                        <a href="{% url 'account_signup' %}"
+                           class="px-4 py-2 bg-orange-600 rounded-lg hover:bg-orange-500 font-semibold transition duration-300 flex items-center gap-2 shadow-lg hover:shadow-orange-500/50">
+                           <i class="fas fa-user-plus"></i>
+                           Registrarse
+                        </a>
+                    {% else %}
+                        <span class="text-gray-400 flex items-center gap-2">
+                            <i class="fas fa-user-circle"></i>
+                            Hola, <span class="font-semibold text-orange-400">{{ request.user.first_name|default:request.user.username }}</span>
+                        </span>
+                        <a href="{% url 'account_logout' %}"
+                           class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 font-semibold transition duration-300 flex items-center gap-2 shadow-lg hover:shadow-red-500/50">
+                           <i class="fas fa-sign-out-alt"></i>
+                           Cerrar sesión
+                        </a>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- NAV MÓVIL -->
+            <ul id="navbar-links-mobile"
+                class="hidden flex-col md:hidden bg-gray-900/98 shadow-2xl border-t border-gray-700 absolute left-0 right-0 top-full backdrop-blur-sm">
+
+                {% if request.user.is_anonymous %}
+                    <li>
+                        <a href="{% url 'goals' %}" 
+                           class="block py-3 px-6 hover:bg-gray-800 transition duration-200 flex items-center gap-3">
+                            <i class="fas fa-bullseye text-orange-400"></i>
+                            Nuestros objetivos
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'about' %}" 
+                           class="block py-3 px-6 hover:bg-gray-800 transition duration-200 flex items-center gap-3">
+                            <i class="fas fa-users text-orange-400"></i>
+                            Sobre nosotros
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'how_does_it_work' %}" 
+                           class="block py-3 px-6 hover:bg-gray-800 transition duration-200 flex items-center gap-3">
+                            <i class="fas fa-question-circle text-orange-400"></i>
+                            ¿Cómo funciona?
+                        </a>
+                    </li>
+                    <li class="border-t border-gray-700">
+                        <a href="{% url 'account_login' %}" 
+                           class="block py-3 px-6 hover:bg-gray-800 transition duration-200 flex items-center gap-3">
+                            <i class="fas fa-sign-in-alt text-blue-400"></i>
+                            Iniciar sesión
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'account_signup' %}" 
+                           class="block py-3 px-6 bg-orange-600 hover:bg-orange-500 text-white font-semibold transition duration-200 flex items-center gap-3">
+                            <i class="fas fa-user-plus"></i>
+                            Registrarse
+                        </a>
+                    </li>
+                {% else %}
+                    <li>
+                        <a href="{% url 'goals' %}" 
+                           class="block py-3 px-6 hover:bg-gray-800 transition duration-200 flex items-center gap-3">
+                            <i class="fas fa-user-circle text-orange-400"></i>
+                            Perfil
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'about' %}" 
+                           class="block py-3 px-6 hover:bg-gray-800 transition duration-200 flex items-center gap-3">
+                            <i class="fas fa-chart-line text-orange-400"></i>
+                            Progreso
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'diagnostico' %}" 
+                           class="block py-3 px-6 hover:bg-gray-800 transition duration-200 flex items-center gap-3">
+                            <i class="fas fa-clipboard-check text-orange-400"></i>
+                            Prueba de diagnóstico
+                        </a>
+                    </li>
+                    
+                    <!-- MENÚ PROFESOR MÓVIL (solo si rol_id == 1) -->
+                    {% if request.user.rol_id == 1 %}
+                    <li class="border-t border-gray-700">
+                        <button id="profesor-toggle-mobile" 
+                                class="w-full text-left py-3 px-6 hover:bg-gray-800 flex items-center justify-between transition duration-200">
+                            <span class="flex items-center gap-3">
+                                <i class="fas fa-chalkboard-teacher text-purple-400"></i>
+                                <span class="font-medium">Profesor</span>
+                            </span>
+                            <i class="fas fa-chevron-down text-xs dropdown-icon" id="profesor-icon-mobile"></i>
+                        </button>
+                        <div id="profesor-submenu-mobile" class="hidden bg-gray-800/50">
+                            <a href="{% url 'profesor:dashboard' %}" 
+                               class="block py-3 px-10 hover:bg-gray-700 text-sm transition duration-200 flex items-center gap-3">
+                                <i class="fas fa-chart-bar text-indigo-400"></i>
+                                Dashboard
+                            </a>
+                            <a href="{% url 'profesor:upload_ejercicios' %}" 
+                               class="block py-3 px-10 hover:bg-gray-700 text-sm transition duration-200 flex items-center gap-3">
+                                <i class="fas fa-file-upload text-green-400"></i>
+                                Carga Masiva
+                            </a>
+                        </div>
+                    </li>
+                    {% endif %}
+
+                    <li class="border-t border-gray-700">
+                        <span class="block py-3 px-6 text-gray-400 flex items-center gap-3">
+                            <i class="fas fa-user-circle text-orange-400"></i>
+                            Hola, <span class="font-semibold text-white">{{ request.user.username }}</span>
+                        </span>
+                    </li>
+                    <li>
+                        <a href="{% url 'account_logout' %}" 
+                           class="block py-3 px-6 hover:bg-red-700 transition duration-200 flex items-center gap-3 text-red-400 hover:text-white">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Cerrar sesión
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="border-t border-gray-700">
+                    <a href="{% url 'pricing' %}" 
+                       class="block py-3 px-6 hover:bg-gray-800 transition duration-200 flex items-center gap-3">
+                        <i class="fas fa-tags text-orange-400"></i>
+                        Pricing
+                    </a>
+                </li>
+            </ul>
+
+        </nav>
     </header>
-    {% block content %}
-    {% endblock %}
+
+    <!-- CONTENIDO -->
+    <main class="min-h-screen">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- SCRIPTS -->
+    <script>
+        // ============================================
+        // MENÚ MÓVIL PRINCIPAL
+        // ============================================
+        const menuToggle = document.getElementById('menu-toggle');
+        const navbarMobile = document.getElementById('navbar-links-mobile');
+
+        if (menuToggle && navbarMobile) {
+            menuToggle.addEventListener('click', () => {
+                navbarMobile.classList.toggle('hidden');
+                navbarMobile.classList.toggle('flex');
+            });
+        }
+
+        // ============================================
+        // BOTÓN DIAGNÓSTICO
+        // ============================================
+        const btnDiagnostico = document.getElementById('btn-diagnostico');
+        if (btnDiagnostico) {
+            btnDiagnostico.addEventListener('click', () => {
+                window.location.href = "{% url 'diagnostico' %}";
+            });
+        }
+
+        // ============================================
+        // DROPDOWN PROFESOR (DESKTOP)
+        // ============================================
+        const profesorToggleDesktop = document.getElementById('profesor-toggle-desktop');
+        const profesorDropdownDesktop = document.getElementById('profesor-dropdown-desktop');
+        const profesorIconDesktop = document.getElementById('profesor-icon-desktop');
+
+        if (profesorToggleDesktop && profesorDropdownDesktop) {
+            // Toggle al hacer clic
+            profesorToggleDesktop.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profesorDropdownDesktop.classList.toggle('active');
+                profesorIconDesktop.classList.toggle('active');
+            });
+
+            // Cerrar al hacer clic fuera
+            document.addEventListener('click', (e) => {
+                if (!profesorToggleDesktop.contains(e.target) && 
+                    !profesorDropdownDesktop.contains(e.target)) {
+                    profesorDropdownDesktop.classList.remove('active');
+                    profesorIconDesktop.classList.remove('active');
+                }
+            });
+        }
+
+        // ============================================
+        // SUBMENÚ PROFESOR (MÓVIL)
+        // ============================================
+        const profesorToggleMobile = document.getElementById('profesor-toggle-mobile');
+        const profesorSubmenuMobile = document.getElementById('profesor-submenu-mobile');
+        const profesorIconMobile = document.getElementById('profesor-icon-mobile');
+
+        if (profesorToggleMobile && profesorSubmenuMobile) {
+            profesorToggleMobile.addEventListener('click', () => {
+                profesorSubmenuMobile.classList.toggle('hidden');
+                profesorIconMobile.classList.toggle('active');
+            });
+        }
+
+        // ============================================
+        // CERRAR MENÚ MÓVIL AL HACER CLIC FUERA
+        // ============================================
+        if (navbarMobile && menuToggle) {
+            document.addEventListener('click', (e) => {
+                if (!navbarMobile.contains(e.target) && !menuToggle.contains(e.target)) {
+                    navbarMobile.classList.add('hidden');
+                    navbarMobile.classList.remove('flex');
+                }
+            });
+        }
+
+        // ============================================
+        // CERRAR MENÚ MÓVIL AL NAVEGAR
+        // ============================================
+        if (navbarMobile) {
+            const mobileLinks = navbarMobile.querySelectorAll('a');
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navbarMobile.classList.add('hidden');
+                    navbarMobile.classList.remove('flex');
+                });
+            });
+        }
+    </script>
+
 </body>
 </html>

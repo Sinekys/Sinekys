@@ -1,69 +1,122 @@
 {% extends "account/base_entrance.html" %}
-{% load allauth i18n %}
+{% load allauth i18n static %}
+
 {% block head_title %}
-    {% trans "Signup" %}
+    {% trans "Registro de Estudiante" %}
 {% endblock head_title %}
+
 {% block content %}
-    {% setvar link %}
-        <a href="{{ login_url }}">
-        {% endsetvar %}
-        {% setvar end_link %}
-        </a>
-    {% endsetvar %}
-{% load static %}
+
 <link rel="stylesheet" href="{% static 'css/base.css' %}">
 <style>
-    body {
-        background-color: #0d0d0d;
-        color: #fff;
-    }
-    .register-container {
-        max-width: 25rem;
-        margin: 2.5rem auto;
-        padding: 2rem 1.5rem;
-        background: #fff;
-        color: #1a1a1a;
-        border-radius: 0.75rem;
-        box-shadow: 0 0.125rem 1rem rgba(0,0,0,0.5);
-        width: 100%;
-        {% comment %} center {% endcomment %}
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-    *{
+  /* (mantén tu CSS, lo recorté aquí por brevedad si ya lo tienes) */
+  body { background-color:#0d0d0d; color:#fff; }
+  .register-container { max-width:30rem; margin:2.5rem auto; padding:2rem; background:#fff; color:#1a1a1a; border-radius:.75rem; }
+  .form-field { margin-bottom:1rem; text-align:left; }
+  .form-field label { display:block; margin-bottom:.5rem; font-weight:bold; color:#333; }
+  .form-field input, .form-field select { width:100%; padding:.75rem; border:1px solid #ddd; border-radius:.25rem; background:white; color:#333; }
+  .warning-text{ color:#e74c3c; font-size:.85rem; margin-top:.25rem; }
+  .help-text{ font-size:.85rem; color:#666; }
+  .login-link{ display:inline-block; margin-top:1rem; padding:.75rem; background:#3498db; color:#fff; border-radius:.5rem; text-decoration:none; }
+</style>
 
-        border: 1px solid red;
-    }    
-    </style>
-    <div class="register-container">
-    {% if not SOCIALACCOUNT_ONLY %}
-        {% url 'account_signup' as action_url %}
-        {% element form form=form method="post" action=action_url tags="entrance,signup" %}
-            {% slot body %}
-                {% csrf_token %}
-                {% element fields form=form unlabeled=True %}
-                {% endelement %}
-                {{ redirect_field }}
-            {% endslot %}
-            {% slot actions %}
-                {% element button type="submit" tags="prominent,login" %}
-                    Registrarse
-                {% endelement %}
-            {% endslot %}
-        {% endelement %}
-    {% endif %}
+<div class="register-container">
+  <h2>{% trans "Registro de Estudiante" %}</h2>
+  <p class="help-text">{% trans "Completa este formulario para crear tu cuenta de estudiante." %}</p>
+
+  {% url 'account_signup' as action_url %}
+  <form method="post" action="{{ action_url }}">
+    {% csrf_token %}
+    <input type="hidden" name="signup_type" value="student">
+
+    <!-- Nombre -->
+    <div class="form-field">
+      <label for="{{ form.first_name.id_for_label }}">{% trans "Nombre" %}</label>
+      {{ form.first_name }}
+      {% if form.first_name.errors %}
+        <div class="warning-text">{{ form.first_name.errors }}</div>
+      {% endif %}
     </div>
-    {% if PASSKEY_SIGNUP_ENABLED %}
-        {% element hr %}
-        {% endelement %}
-        {% element button href=signup_by_passkey_url tags="prominent,signup,outline,primary" %}
-            {% trans "Sign up using a passkey" %}
-        {% endelement %}
-    {% endif %}
-    {% if SOCIALACCOUNT_ENABLED %}
-        {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
-    {% endif %}
-{% endblock content %}
+
+    <!-- Apellido -->
+    <div class="form-field">
+      <label for="{{ form.last_name.id_for_label }}">{% trans "Apellido" %}</label>
+      {{ form.last_name }}
+      {% if form.last_name.errors %}
+        <div class="warning-text">{{ form.last_name.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- CARRERA (importante: el campo en el form se llama `career`) -->
+    <div class="form-field">
+      <label for="{{ form.career.id_for_label }}">{% trans "Carrera" %} *</label>
+      {{ form.career }}
+      {% if form.career.errors %}
+        <div class="warning-text">{{ form.career.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Email -->
+    <div class="form-field">
+      <label for="{{ form.email.id_for_label }}">{% trans "Correo electrónico" %} *</label>
+      {{ form.email }}
+      {% if form.email.errors %}
+        <div class="warning-text">{{ form.email.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Password -->
+    <div class="form-field">
+      <label for="{{ form.password1.id_for_label }}">{% trans "Contraseña" %} *</label>
+      {{ form.password1 }}
+      {% if form.password1.errors %}
+        <div class="warning-text">{{ form.password1.errors }}</div>
+      {% endif %}
+      {% if form.password1.help_text %}
+        <div class="help-text">{{ form.password1.help_text }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-field">
+      <label for="{{ form.password2.id_for_label }}">{% trans "Confirmar contraseña" %} *</label>
+      {{ form.password2 }}
+      {% if form.password2.errors %}
+        <div class="warning-text">{{ form.password2.errors }}</div>
+      {% endif %}
+    </div>
+
+    {{ redirect_field }}
+
+    <button type="submit" class="prominent login button" style="padding:.75rem 1.5rem; background:#3498db; color:white; border:none; border-radius:.5rem;">
+      {% trans "Registrarse" %}
+    </button>
+  </form>
+        <div class="text-center mt-4">
+    <div class="mt-4 flex flex-col gap-3 text-center">
+
+    <!-- Botón para iniciar sesión -->
+    <a href="{{ login_url }}"
+       class="inline-block px-4 py-2 rounded-lg text-white"
+       style="background-color:#3498db; text-decoration:none;">
+       ¿Ya tienes cuenta? Inicia sesión
+    </a>
+    
+    
+        <!-- Botón para docentes -->
+    <a href="{% url 'teacher_signup' %}"
+       class="inline-block px-4 py-2 rounded-lg text-white"
+       style="background-color: #9b59b6; text-decoration:none;">
+        ¿Eres docente? Regístrate aquí
+    </a>
+
+    
+
+    </div>
+
+</div>
+
+{% if SOCIALACCOUNT_ENABLED %}
+  {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+{% endif %}
+
+{% endblock %}

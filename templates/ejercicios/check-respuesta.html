@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Feedback{% endblock %}
+
+{% block content %}
+
+<main class="min-h-screen bg-[#0a0a0a] py-10 px-4 flex flex-col items-center">
+
+    <!-- Header -->
+    <header class="w-full max-w-5xl flex items-center justify-between mb-10">
+        <a href="{% url 'mainPage' %}" class="text-orange-400 font-semibold hover:text-orange-300 flex items-center">
+            ← Volver
+        </a>
+        <h1 class="text-3xl font-extrabold text-white">Resultado del Ejercicio</h1>
+        <div class="w-6"></div>
+    </header>
+
+    <!-- Card principal - Resultado -->
+    <section class="w-full max-w-5xl bg-gray-900 border border-gray-800 rounded-2xl shadow-xl p-8 mb-8">
+        <h2 class="text-2xl font-bold text-white mb-4">Ejercicio</h2>
+        <p class="text-gray-300 text-lg mb-4">{{ ejercicio.enunciado }}</p>
+
+        <div class="mt-6 flex items-center justify-between">
+            <div>
+                <p class="text-lg text-gray-300">
+                    Tu respuesta: <span class="font-bold text-white">{{ intento.respuesta_estudiante }}</span>
+                </p>
+            </div>
+
+            <div class="flex items-center gap-4">
+                {% if es_correcto %}
+                    <span class="px-4 py-2 bg-green-600 text-white rounded-full font-semibold">Correcto ✓</span>
+                {% else %}
+                    <span class="px-4 py-2 bg-red-600 text-white rounded-full font-semibold">Incorrecto ✗</span>
+                {% endif %}
+                <span class="text-gray-400">(Puntos: {{ puntos }})</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- IA Feedback -->
+    <section class="w-full max-w-5xl bg-gray-900 border border-gray-800 rounded-2xl shadow-xl p-8 mb-8">
+        <h3 class="text-xl font-bold text-white mb-4">Explicación generada por IA</h3>
+
+        {% if feedback %}
+            <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 max-h-80 overflow-y-auto whitespace-pre-line text-gray-200 leading-relaxed">
+                {{ feedback.contexto_ejercicio }}
+            </div>
+
+            <!-- Corrección estructurada -->
+            <h4 class="text-lg mt-6 font-semibold text-orange-400">Corrección estructurada</h4>
+
+            {% with fb=feedback_parsed %}
+            {% if fb and fb.pasos %}
+                {% for p in fb.pasos %}
+                {{ p.tipo }} - {{ p.contenido }}
+                {% endfor %}
+            {% elif fb and fb.pasos_correctos %}
+                {% for step in fb.pasos_correctos %}
+                {{ step }}
+                {% endfor %}
+            {% else %}
+                <pre>{{ fb|default:"No hay estructura de feedback disponible" }}</pre>
+            {% endif %}
+            {% endwith %}
+
+        {% else %}
+            <p class="text-gray-400">No hay feedback IA disponible.</p>
+        {% endif %}
+    </section>
+
+    <!-- Comparación de pasos -->
+    <section class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+
+        <!-- Tus pasos -->
+        <div class="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-xl">
+            <h3 class="text-xl font-bold text-white mb-4">Tus pasos</h3>
+
+            {% if pasos_intento %}
+                <ol class="space-y-3">
+                    {% for p in pasos_intento %}
+                        <li class="bg-gray-800 border border-gray-700 p-3 rounded-lg">
+                            <p class="whitespace-pre-line text-gray-200">{{ p.contenido }}</p>
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% else %}
+                <p class="text-gray-400">No ingresaste pasos (avisar a administración).</p>
+            {% endif %}
+        </div>
+
+        <!-- Pasos correctos -->
+        <div class="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-xl">
+            <h3 class="text-xl font-bold text-white mb-4">Pasos correctos</h3>
+
+            {% if pasos_correctos %}
+                <ol class="space-y-3">
+                    {% for p in pasos_correctos %}
+                        <li class="bg-gray-800 border border-gray-700 p-3 rounded-lg">
+                            <p class="whitespace-pre-line text-gray-200">{{ p.contenido }}</p>
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% else %}
+                <p class="text-gray-400">No hay pasos correctos registrados.</p>
+            {% endif %}
+        </div>
+
+    </section>
+
+    <!-- Feedback detallado paso a paso -->
+    {% if feedback_pasos %}
+    <section class="w-full max-w-5xl bg-gray-900 border border-gray-800 rounded-2xl shadow-xl p-8 mb-10">
+        <h3 class="text-xl font-bold text-white mb-4">Feedback detallado ({{ feedback.fuente_ia }})</h3>
+
+        <ol class="space-y-4">
+            {% for fp in feedback_pasos %}
+            <li class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <span class="font-bold text-orange-300 uppercase">{{ fp.tipo_feedback.nombre }}</span>
+                <p class="mt-2 text-gray-200 whitespace-pre-line">{{ fp.contenido }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+    {% endif %}
+
+</main>
+
+{% endblock %}

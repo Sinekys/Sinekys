@@ -144,9 +144,6 @@ ENV/
 env.bak/
 venv.bak/
 
-000*.py
-000*.py[cod]
-000*$py.class
 
 # Spyder project settings
 .spyderproject
@@ -211,3 +208,4 @@ marimo/_lsp/
 __marimo__/
 
 
+/legacy

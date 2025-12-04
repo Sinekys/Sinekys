@@ -1,0 +1,651 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="bg-gray-100 min-h-screen">
+
+    <main class="bg-white max-w-7xl mx-auto mt-10 px-6 py-8 rounded-xl shadow-md">
+
+        <!-- ENCABEZADO -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Dashboard de Profesor</h1>
+            <p class="text-gray-600 mt-2">Métricas y análisis de rendimiento estudiantil</p>
+        </div>
+
+        <!-- FILTROS SIMPLES -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-10 border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 text-black">Filtros de Análisis</h2>
+
+            <form method="GET" action="{% url 'profesor:dashboard' %}" class="grid grid-cols-1 md:grid-cols-2 gap-4" id="filterForm">
+
+                <!-- Filtro Carrera -->
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700">Carrera</label>
+                    <select 
+                        name="carrera_id"
+                        id="carrera_id"
+                        class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-black focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        onchange="document.getElementById('filterForm').submit()"
+                    >
+                        <option value="">Seleccione una carrera</option>
+                        {% for c in carreras %}
+                        <option value="{{ c.id }}" {% if selected_carrera and selected_carrera.id == c.id %}selected{% endif %}>
+                            {{ c.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro Materia -->
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700">Materia (Opcional)</label>
+                    <select 
+                        name="materia_id"
+                        id="materia_id"
+                        class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-black focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        onchange="document.getElementById('filterForm').submit()"
+                    >
+                        <option value="">Todas las materias</option>
+                        {% for m in materias %}
+                        <option value="{{ m.id }}" {% if selected_materia and selected_materia.id == m.id %}selected{% endif %}>
+                            {{ m.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="md:col-span-2 flex gap-3 justify-end">
+                    <button 
+                        type="submit"
+                        class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+                    >
+                        Aplicar Filtros
+                    </button>
+                    <a 
+                        href="{% url 'profesor:dashboard' %}"
+                        class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+                    >
+                        Limpiar
+                    </a>
+                </div>
+
+            </form>
+        </div>
+
+        {% if selected_carrera or selected_materia %}
+
+        <!-- RESUMEN GLOBAL -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+
+            <div class="bg-gradient-to-br from-gray-900 to-gray-700 text-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90 mb-1">Estudiantes Activos</p>
+                        <p class="text-4xl font-bold">{{ total_estudiantes }}</p>
+                    </div>
+                    <svg class="w-12 h-12 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-indigo-600 to-indigo-400 text-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-black opacity-90 mb-1">Intentos Totales</p>
+                        <p class="text-4xl font-bold text-black">{{ total_intentos_general }}</p>
+                    </div>
+                    <svg class="w-12 h-12 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-600 to-green-400 text-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-black opacity-90 mb-1">Precisión Promedio</p>
+                        <p class="text-4xl font-bold text-black">
+                            {% if promedio_general_accuracy > 0 %}
+                                {{ promedio_general_accuracy }}%
+                            {% else %} - {% endif %}
+                        </p>
+                    </div>
+                    <svg class="w-12 h-12 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-600 to-purple-400 text-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-black opacity-90 mb-1">Tiempo Promedio</p>
+                        <p class="text-4xl font-bold text-black">
+                            {% if promedio_tiempo_general > 0 %}
+                                {{ promedio_tiempo_general|floatformat:1 }}s
+                            {% else %} - {% endif %}
+                        </p>
+                    </div>
+                    <svg class="w-12 h-12 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- GRÁFICOS PRINCIPALES (4 gráficos simples) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+
+            <!-- Intentos por estudiante -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 flex items-center">
+                    <span class="w-2 h-8 bg-indigo-600 rounded mr-3"></span>
+                    Intentos por Estudiante
+                </h3>
+                <canvas id="chartIntentos"></canvas>
+            </div>
+
+            <!-- Precisión por estudiante -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 flex items-center">
+                    <span class="w-2 h-8 bg-green-600 rounded mr-3"></span>
+                    Precisión por Estudiante (%)
+                </h3>
+                <canvas id="chartAccuracy"></canvas>
+            </div>
+
+            <!-- Correctos vs Incorrectos -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 flex items-center">
+                    <span class="w-2 h-8 bg-purple-600 rounded mr-3"></span>
+                    Correctos vs Incorrectos
+                </h3>
+                <canvas id="chartCorrectIncorrect"></canvas>
+            </div>
+
+            <!-- Distribución por Tipo de Ejercicio -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 flex items-center">
+                    <span class="w-2 h-8 bg-blue-600 rounded mr-3"></span>
+                    Distribución por Tipo
+                </h3>
+                <canvas id="chartTipos"></canvas>
+            </div>
+
+        </div>
+
+        <!-- GRÁFICOS ADICIONALES (2 gráficos simples) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+
+            <!-- Distribución por Dificultad -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 flex items-center">
+                    <span class="w-2 h-8 bg-red-600 rounded mr-3"></span>
+                    Distribución por Dificultad
+                </h3>
+                <canvas id="chartDificultad"></canvas>
+            </div>
+
+            <!-- Intentos por Día -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 flex items-center">
+                    <span class="w-2 h-8 bg-cyan-600 rounded mr-3"></span>
+                    Actividad (Últimos 30 días)
+                </h3>
+                <canvas id="chartIntentosPorDia"></canvas>
+            </div>
+
+        </div>
+
+        <!-- TABLA DETALLADA -->
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mb-12">
+            <h3 class="text-xl font-semibold mb-6 text-gray-900 flex items-center">
+                <span class="w-2 h-8 bg-gray-900 rounded mr-3"></span>
+                Detalle de Estudiantes
+            </h3>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full border rounded-xl overflow-hidden">
+                    <thead class="bg-gray-100 text-gray-700 font-semibold">
+                        <tr>
+                            <th class="p-4 text-left text-black">Nombre</th>
+                            <th class="p-4 text-left text-black">Email</th>
+                            <th class="p-4 text-center text-black">Semestre</th>
+                            <th class="p-4 text-center text-black">Intentos</th>
+                            <th class="p-4 text-center text-black">Correctos</th>
+                            <th class="p-4 text-center text-black">Incorrectos</th>
+                            <th class="p-4 text-center text-black">% Correctos</th>
+                            <th class="p-4 text-center text-black">Accuracy</th>
+                            <th class="p-4 text-center text-black">Tiempo Prom.</th>
+                            <th class="p-4 text-center text-black">Dificultad Prom.</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for s in students %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="p-4 text-black font-medium">
+                                {{ s.first_name }} {{ s.last_name }}
+                            </td>
+                            <td class="p-4 text-black text-sm">{{ s.email }}</td>
+                            <td class="p-4 text-black text-center">{{ s.semestre_actual }}</td>
+                            <td class="p-4 text-black text-center font-semibold">{{ s.total_intentos }}</td>
+                            <td class="p-4 text-black text-center font-semibold">{{ s.total_correctos }}</td>
+                            <td class="p-4 text-black text-center font-semibold">{{ s.total_incorrectos }}</td>
+                            <td class="p-4 text-center">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium
+                                    {% if s.porcentaje_correctos >= 80 %}bg-green-100 text-black
+                                    {% elif s.porcentaje_correctos >= 60 %}bg-yellow-100 text-black
+                                    {% else %}bg-red-100 text-black{% endif %}">
+                                    {{ s.porcentaje_correctos }}%
+                                </span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium
+                                    {% if s.accuracy_promedio >= 80 %}bg-green-100 text-black
+                                    {% elif s.accuracy_promedio >= 60 %}bg-yellow-100 text-black
+                                    {% else %}bg-red-100 text-black{% endif %}">
+                                    {{ s.accuracy_promedio }}%
+                                </span>
+                            </td>
+                            <td class="p-4 text-black text-center">{{ s.tiempo_promedio }}s</td>
+                            <td class="p-4 text-center">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium
+                                    {% if s.dificultad_promedio >= 1.5 %}bg-red-100 text-black
+                                    {% elif s.dificultad_promedio >= 0 %}bg-yellow-100 text-black
+                                    {% else %}bg-green-100 text-black{% endif %}">
+                                    {{ s.dificultad_promedio }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="p-8 text-center text-gray-500">
+                                No hay datos disponibles con los filtros seleccionados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        {% else %}
+
+        <!-- MENSAJE INICIAL -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg">
+            <div class="flex items-start">
+                <svg class="w-6 h-6 text-blue-500 mt-1 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-semibold text-blue-900 mb-2">
+                        Selecciona una Carrera o Materia
+                    </h3>
+                    <p class="text-blue-700">
+                        Para comenzar a visualizar las métricas, selecciona al menos una carrera o materia en los filtros superiores.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        
+        {% endif %}
+    </main>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🚀 Iniciando dashboard de profesor...");
+
+    // Parsear datos del backend con validación
+    let labels, intentos, accuracy, correctos, incorrectos, tiempo, dificultad;
+    let tiposLabels, tiposCount;
+    let dificultadLabels, dificultadData;
+    let intentosPorDiaLabels, intentosPorDiaData;
+
+    try {
+        labels = JSON.parse('{{ chart_labels|safe }}');
+        intentos = JSON.parse('{{ chart_intentos|safe }}');
+        accuracy = JSON.parse('{{ chart_accuracy|safe }}');
+        correctos = JSON.parse('{{ chart_correctos|safe }}');
+        incorrectos = JSON.parse('{{ chart_incorrectos|safe }}');
+        tiempo = JSON.parse('{{ chart_tiempo|safe }}');
+        dificultad = JSON.parse('{{ chart_dificultad|safe }}');
+
+        tiposLabels = JSON.parse('{{ chart_tipos_labels|safe }}');
+        tiposCount = JSON.parse('{{ chart_tipos_count|safe }}');
+
+        dificultadLabels = JSON.parse('{{ chart_distribucion_dificultad_labels|safe }}');
+        dificultadData = JSON.parse('{{ chart_distribucion_dificultad_data|safe }}');
+
+        intentosPorDiaLabels = JSON.parse('{{ chart_intentos_por_dia_labels|safe }}');
+        intentosPorDiaData = JSON.parse('{{ chart_intentos_por_dia_data|safe }}');
+
+        console.log("✅ Datos parseados:");
+        console.log("  - Estudiantes:", labels.length);
+        console.log("  - Tipos ejercicio:", tiposLabels.length);
+        console.log("  - Días actividad:", intentosPorDiaLabels.length);
+        console.log("  - Rangos dificultad:", dificultadLabels.length);
+    } catch (e) {
+        console.error("❌ Error parseando JSON:", e);
+        return;
+    }
+
+    // Función helper para verificar si un canvas existe
+    function canvasExists(id) {
+        const canvas = document.getElementById(id);
+        if (!canvas) {
+            console.warn(`⚠️ Canvas "${id}" no encontrado en el DOM`);
+            return false;
+        }
+        return true;
+    }
+
+    // Configuración común para todos los gráficos
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    font: {
+                        size: 12
+                    }
+                }
+            }
+        }
+    };
+
+    // =====================================================
+    // 1️⃣ GRÁFICO: INTENTOS POR ESTUDIANTE (Bar)
+    // =====================================================
+    if (labels && labels.length > 0 && canvasExists("chartIntentos")) {
+        console.log("📊 Creando gráfico: Intentos por estudiante");
+        try {
+            new Chart(document.getElementById("chartIntentos"), {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Total de Intentos",
+                        data: intentos,
+                        backgroundColor: "rgba(99, 102, 241, 0.7)",
+                        borderColor: "rgba(99, 102, 241, 1)",
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            console.log("✅ Gráfico de intentos creado");
+        } catch (e) {
+            console.error("❌ Error creando gráfico de intentos:", e);
+        }
+    } else {
+        console.warn("⚠️ No hay datos para el gráfico de intentos");
+    }
+
+    // =====================================================
+    // 2️⃣ GRÁFICO: ACCURACY POR ESTUDIANTE (Line)
+    // =====================================================
+    if (labels && labels.length > 0 && canvasExists("chartAccuracy")) {
+        console.log("📊 Creando gráfico: Accuracy por estudiante");
+        try {
+            new Chart(document.getElementById("chartAccuracy"), {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Accuracy (%)",
+                        data: accuracy,
+                        borderColor: "rgba(34, 197, 94, 1)",
+                        backgroundColor: "rgba(34, 197, 94, 0.1)",
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            console.log("✅ Gráfico de accuracy creado");
+        } catch (e) {
+            console.error("❌ Error creando gráfico de accuracy:", e);
+        }
+    } else {
+        console.warn("⚠️ No hay datos para el gráfico de accuracy");
+    }
+
+    // =====================================================
+    // 3️⃣ GRÁFICO: CORRECTOS VS INCORRECTOS (Stacked Bar)
+    // =====================================================
+    if (labels && labels.length > 0 && canvasExists("chartCorrectIncorrect")) {
+        console.log("📊 Creando gráfico: Correctos vs Incorrectos");
+        try {
+            new Chart(document.getElementById("chartCorrectIncorrect"), {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "Correctos",
+                            data: correctos,
+                            backgroundColor: "rgba(34, 197, 94, 0.8)",
+                            borderColor: "rgba(34, 197, 94, 1)",
+                            borderWidth: 2,
+                            borderRadius: 4
+                        },
+                        {
+                            label: "Incorrectos",
+                            data: incorrectos,
+                            backgroundColor: "rgba(239, 68, 68, 0.8)",
+                            borderColor: "rgba(239, 68, 68, 1)",
+                            borderWidth: 2,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        x: { 
+                            stacked: true 
+                        },
+                        y: { 
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            console.log("✅ Gráfico de correctos/incorrectos creado");
+        } catch (e) {
+            console.error("❌ Error creando gráfico de correctos/incorrectos:", e);
+        }
+    } else {
+        console.warn("⚠️ No hay datos para el gráfico de correctos/incorrectos");
+    }
+
+    // =====================================================
+    // 4️⃣ GRÁFICO: DISTRIBUCIÓN POR TIPO DE EJERCICIO (Doughnut)
+    // =====================================================
+    if (tiposLabels && tiposLabels.length > 0 && canvasExists("chartTipos")) {
+        console.log("📊 Creando gráfico: Tipos de ejercicio");
+        try {
+            new Chart(document.getElementById("chartTipos"), {
+                type: "doughnut",
+                data: {
+                    labels: tiposLabels,
+                    datasets: [{
+                        data: tiposCount,
+                        backgroundColor: [
+                            "rgba(99, 102, 241, 0.8)",
+                            "rgba(34, 197, 94, 0.8)",
+                            "rgba(249, 115, 22, 0.8)",
+                            "rgba(239, 68, 68, 0.8)",
+                            "rgba(168, 85, 247, 0.8)",
+                            "rgba(14, 165, 233, 0.8)",
+                            "rgba(236, 72, 153, 0.8)",
+                            "rgba(234, 179, 8, 0.8)"
+                        ],
+                        borderColor: "#fff",
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+            console.log("✅ Gráfico de tipos creado");
+        } catch (e) {
+            console.error("❌ Error creando gráfico de tipos:", e);
+        }
+    } else {
+        console.warn("⚠️ No hay datos para el gráfico de tipos");
+    }
+
+    // =====================================================
+    // 5️⃣ GRÁFICO: DISTRIBUCIÓN POR DIFICULTAD (Bar Horizontal)
+    // =====================================================
+    if (dificultadLabels && dificultadLabels.length > 0 && canvasExists("chartDificultad")) {
+        console.log("📊 Creando gráfico: Distribución por dificultad");
+        try {
+            new Chart(document.getElementById("chartDificultad"), {
+                type: "bar",
+                data: {
+                    labels: dificultadLabels,
+                    datasets: [{
+                        label: "Cantidad de Intentos",
+                        data: dificultadData,
+                        backgroundColor: [
+                            "rgba(34, 197, 94, 0.8)",   // Muy fácil - verde
+                            "rgba(132, 204, 22, 0.8)",  // Fácil - verde claro
+                            "rgba(234, 179, 8, 0.8)",   // Intermedio - amarillo
+                            "rgba(249, 115, 22, 0.8)",  // Medio - naranja
+                            "rgba(239, 68, 68, 0.8)",   // Difícil - rojo
+                            "rgba(220, 38, 38, 0.8)"    // Muy difícil - rojo oscuro
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    indexAxis: 'y', // Horizontal
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            console.log("✅ Gráfico de dificultad creado");
+        } catch (e) {
+            console.error("❌ Error creando gráfico de dificultad:", e);
+        }
+    } else {
+        console.warn("⚠️ No hay datos para el gráfico de dificultad");
+    }
+
+    // =====================================================
+    // 6️⃣ GRÁFICO: ACTIVIDAD DIARIA (Line con área)
+    // =====================================================
+    if (intentosPorDiaLabels && intentosPorDiaLabels.length > 0 && canvasExists("chartIntentosPorDia")) {
+        console.log("📊 Creando gráfico: Actividad diaria");
+        try {
+            new Chart(document.getElementById("chartIntentosPorDia"), {
+                type: "line",
+                data: {
+                    labels: intentosPorDiaLabels,
+                    datasets: [{
+                        label: "Intentos Diarios",
+                        data: intentosPorDiaData,
+                        borderColor: "rgba(6, 182, 212, 1)",
+                        backgroundColor: "rgba(6, 182, 212, 0.2)",
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: "rgba(6, 182, 212, 1)"
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+            console.log("✅ Gráfico de actividad diaria creado");
+        } catch (e) {
+            console.error("❌ Error creando gráfico de actividad:", e);
+        }
+    } else {
+        console.warn("⚠️ No hay datos para el gráfico de actividad diaria");
+    }
+
+    console.log("🎉 Proceso de carga de gráficos completado");
+});
+</script>
+
+{% include "footer.html" %}
+
+{% endblock %}

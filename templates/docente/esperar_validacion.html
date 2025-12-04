@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Esperando verificación" %}{% endblock %}
+
+{% block content %}
+<div class="register-container" style="max-width: 40rem;">
+    <h2>{% trans "Registro exitoso" %}</h2>
+    <div class="help-text" style="margin: 2rem 0;">
+        <p>{% trans "Gracias por registrarte como docente en Sinekys." %}</p>
+        <p>{% trans "Tu cuenta está actualmente en proceso de verificación por nuestro equipo administrativo." %}</p>
+        <p>{% trans "Recibirás un correo electrónico una vez que tu cuenta haya sido verificada y activada." %}</p>
+        <p style="margin-top: 1.5rem;">
+            <strong>{% trans "Tiempo estimado de verificación:" %}</strong> 
+            {% trans "24-48 horas hábiles" %}
+        </p>
+    </div>
+    
+    <div style="margin-top: 2rem; padding: 1rem; background-color: #e3f2fd; border-radius: 0.5rem;">
+        <h3>{% trans "¿Qué puedes hacer mientras esperas?" %}</h3>
+        <ul style="text-align: left; margin-top: 0.5rem; padding-left: 1.5rem;">
+            <li>{% trans "Explora nuestros recursos educativos en el sitio" %}</li>
+            <li>{% trans "Revisa tu correo electrónico (incluye carpeta de spam) para recibir actualizaciones" %}</li>
+            <li>{% trans "Contacta a soporte si tienes preguntas urgentes" %}</li>
+        </ul>
+    </div>
+    
+    <div style="margin-top: 2rem;">
+        <a href="{% url 'account_login' %}" class="teacher-link" style="background: #2ecc71;">
+            {% trans "Volver al inicio de sesión" %}
+        </a>
+    </div>
+</div>
+{% endblock %}
