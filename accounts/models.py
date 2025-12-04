@@ -153,12 +153,22 @@ class Especialidad(models.Model):
     def __str__(self):
         return self.nombre
 
+
+
 class Docente(AbstractBaseModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='docente')
-    especialidad = models.ForeignKey(Especialidad, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Especialidad')
+    especialidades = models.ManyToManyField(Especialidad, blank=True, related_name='docentes', verbose_name='Especialidades')
     biografia = models.TextField(max_length=500, blank=True, verbose_name='Biografía')
     materias = models.ManyToManyField("core.Materia", through='core.DocenteMateria', verbose_name='Materias')
-
+    certification_file = models.FileField(
+        upload_to='certifications/',
+        null=True,
+        blank=True,
+        verbose_name='Certificado',
+        help_text='Certificado o título que acredita la formación como docente'
+    )
+    is_verified = models.BooleanField(default=False, verbose_name='Verificado')
+    
     def __str__(self):
         return f"Docente: {self.user.get_full_name()}"
 

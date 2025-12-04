@@ -33,10 +33,21 @@
         justify-content: center;
         text-align: center;
     }
-    *{
-
-        border: 1px solid red;
+    .teacher-link{
+        margin-top: 1.5rem;
+        padding: 0.75rem;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.3s;
     }    
+    .teacher-link:hover {
+        background: #2980b9;
+    }
     </style>
     <div class="register-container">
     {% if not SOCIALACCOUNT_ONLY %}
@@ -50,10 +61,11 @@
             {% endslot %}
             {% slot actions %}
                 {% element button type="submit" tags="prominent,login" %}
-                    Registrarse
+                    Registrarse como estudiante
                 {% endelement %}
             {% endslot %}
         {% endelement %}
+        <a class="teacher-link" href="{% url 'teacher_signup' %}">¿Eres docente? Regístrate aquí</a>
     {% endif %}
     </div>
     {% if PASSKEY_SIGNUP_ENABLED %}

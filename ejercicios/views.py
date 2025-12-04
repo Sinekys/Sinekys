@@ -251,7 +251,7 @@ class DiagnosticTestView(View):
         # criterios de finalizacion
         # criterios de finalizacion
         num_items = Intento.objects.filter(estudiante=estudiante).count() #Ojo puede haber un problema, ya que si el es estudiante cancela la prueba, los intentos seguiran registrados y por lo tanto el número aumentaría
-        max_items = 5 # CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30
+        max_items = 2 # CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30 CAMBIAR A 30
         umbral_se = 0.4
         
         
@@ -437,9 +437,6 @@ class EjercicioView(DiagnosticoCompletadoMixin,LoginRequiredMixin,View):
                 fuente="chatgpt",
                 pasos_feedback=pasos_feedback
             )
-        
-        
-        
         
         
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.GET.get("json")

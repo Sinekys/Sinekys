@@ -133,8 +133,10 @@ AUTHENTICATION_BACKENDS = [
 #         }
 #     }
 # }
-
-
+# Para producción necesito configurar el almacenamiento de 
+# archivos estáticos y media en S3
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -212,7 +214,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('G_EMAIL')
 EMAIL_HOST_PASSWORD = os.getenv('G_PASSWORD') 
-
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
 LOGIN_REDIRECT_URL = '/'
 
 # ACCOUNT_AUTHENTICATION_METHOD = 'email' #'username_email' # It says its deprecated...
@@ -236,6 +238,7 @@ ACCOUNT_USERNAME_BLACKLIST = [
 AUTH_USER_MODEL = 'accounts.CustomUser'
 AUTH_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.CustomSignupForm'
+# ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.UnifiedSignupForm'
 
 
 # Configuraciones matemática sencillas | falta aplicar
@@ -244,6 +247,12 @@ DIAGNOSTICO_UMBRAL_SE = 0.4
 DIAGNOSTICO_UMBRAL_EXTREMO = 2.9
 DIAGNOSTICO_MIN_EJERCICIOS_EXTREMO = 10
 DIAGNOSTIO_INFO_MINIMA = 0.1
+
+
+
+ACCOUNT_ADAPTER = 'accounts.adapter.CustomAccountAdapter'
+# URL de redirección para docentes pendientes de verificación
+TEACHER_PENDING_VERIFICATION_URL = '/docente/esperar-validacion'
 
 
 

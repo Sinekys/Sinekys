@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-# from accounts import urls as accounts_urls
+from accounts import urls as accounts_urls
 from core import urls as core_urls
 from ejercicios import urls as ejercicios_urls
 from django.conf import settings
@@ -27,8 +27,8 @@ urlpatterns = [
 
     # path('', home_view, name='mainPage'),
     path('', include(core_urls)),
-    # path('loggin/', include(accounts_urls)),
+    # 
     path('accounts/', include('allauth.urls')),
-    
+    path('accounts/', include(accounts_urls)),
     path('ejercicio/', include(ejercicios_urls)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
