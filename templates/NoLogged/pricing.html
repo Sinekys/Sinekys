@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Planes y Precios{% endblock %}
+
+{% block content %}
+
+<section class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Título -->
+        <div class="text-center mb-20">
+            <h1 class="font-extrabold text-5xl md:text-6xl text-gray-900 mb-4">
+                Planes <span class="text-orange-400">Sinekys</span>
+            </h1>
+            <p class="text-gray-600 text-xl max-w-3xl mx-auto">
+                Invierte en tu futuro. Elige la IA que potenciará tu éxito académico.
+            </p>
+        </div>
+
+        <!-- Grid de planes -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+            <!-- Plan Estudiante -->
+            <div class="transform hover:scale-105 transition duration-300">
+                <div class="w-full p-6 rounded-3xl bg-gray-50 border border-gray-200 shadow-md flex flex-col justify-between hover:shadow-orange-200/40">
+                    <div>
+                        <h3 class="font-bold text-orange-400 text-2xl mb-4">
+                            <i class="fa-solid fa-graduation-cap mr-2"></i> Estudiante
+                        </h3>
+                        <p class="text-4xl font-extrabold text-gray-900 mt-3">$5.600 
+                            <span class="text-base font-normal text-gray-500">/mes</span>
+                        </p>
+                        <p class="text-gray-600 mt-4 font-light border-b border-gray-200 pb-4">
+                            Perfecto para <span class="font-bold text-gray-900">aprobar</span> con asistencia IA especializada.
+                        </p>
+                        <ul class="list-none text-start mt-4 space-y-3">
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Acceso a IA Sinekys</li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Basado en tu malla universitaria</li>
+                            <li class="flex items-center text-gray-400"><i class="fa-solid fa-lightbulb text-yellow-400 w-5 mr-3"></i> 1.500 consultas al mes</li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Métricas básicas de progreso</li>
+                            <li class="flex items-center text-gray-400 line-through"><i class="fa-solid fa-xmark text-red-500 w-5 mr-3"></i> Creación de ejercicios (Solo uso)</li>
+                        </ul>
+                    </div>
+                    <button onclick="checkout('basic')" class="w-full mt-8 px-6 py-3 bg-orange-400 text-white rounded-lg font-bold hover:bg-orange-500 transition duration-300">
+                        ¡Comienza ahora!
+                    </button>
+                </div>
+            </div>
+
+            <!-- Plan Profesor (Más Popular) -->
+            <div class="transform hover:scale-105 transition duration-300 relative">
+                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-orange-400 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg z-10">
+                    <i class="fa-solid fa-star mr-1"></i> Más Popular
+                </div>
+                <div class="w-full p-6 rounded-3xl bg-orange-50 border-4 border-orange-400 shadow-2xl shadow-orange-300/30 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-2xl mt-3 mb-4">
+                            <i class="fa-solid fa-chalkboard-user mr-2"></i> Profesor
+                        </h3>
+                        <p class="text-4xl font-extrabold text-gray-900">$8.900 
+                            <span class="text-base font-normal text-gray-500">/mes</span>
+                        </p>
+                        <p class="text-gray-600 mt-4 font-light border-b border-gray-200 pb-4">
+                            La herramienta ideal para <span class="font-bold text-gray-900">personalizar</span> tu clase y evaluar.
+                        </p>
+                        <ul class="list-none text-start mt-4 space-y-3">
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Acceso total a IA Sinekys</li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Creación ilimitada de ejercicios</li>
+                            <li class="flex items-center text-gray-500"><i class="fa-solid fa-lightbulb text-yellow-400 w-5 mr-3"></i> Gestión de hasta <span class="font-bold text-gray-900">25 alumnos</span></li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Métricas completas de rendimiento grupal</li>
+                            <li class="flex items-center text-gray-400 line-through"><i class="fa-solid fa-xmark text-red-500 w-5 mr-3"></i> Grupos de estudio</li>
+                        </ul>
+                    </div>
+                    <button onclick="checkout('profesor')" class="w-full mt-8 px-6 py-3 bg-orange-400 text-white rounded-lg font-bold hover:bg-orange-500 transition duration-300 shadow-md">
+                        Transforma tu enseñanza
+                    </button>
+                </div>
+            </div>
+
+            <!-- Plan Estudiante Pro -->
+            <div class="transform hover:scale-105 transition duration-300">
+                <div class="w-full p-6 rounded-3xl bg-gray-50 border border-gray-200 shadow-md flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-orange-400 text-2xl mb-4"><i class="fa-solid fa-user-gear mr-2"></i> Estudiante Pro</h3>
+                        <p class="text-4xl font-extrabold mt-3 text-gray-900">$9.990 <span class="text-base font-normal text-gray-500">/mes</span></p>
+                        <p class="text-gray-600 mt-4 font-light border-b border-gray-200 pb-4">Para el usuario que necesita <span class="font-bold text-gray-900">potencia y analítica individual</span>.</p>
+                        <ul class="list-none text-start mt-4 space-y-3">
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Acceso total sin límites</li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Consultas ilimitadas</li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Métricas personales avanzadas</li>
+                            <li class="flex items-center text-gray-500"><i class="fa-solid fa-lightbulb text-yellow-400 w-5 mr-3"></i> Prioridad en el uso intensivo</li>
+                            <li class="flex items-center text-gray-400 line-through"><i class="fa-solid fa-xmark text-red-500 w-5 mr-3"></i> Gestión de alumnos</li>
+                        </ul>
+                    </div>
+                    <button onclick="checkout('superpro')" class="w-full mt-8 px-6 py-3 bg-orange-400 text-white rounded-lg font-bold hover:bg-orange-500 transition duration-300">
+                        Acceso total y sin límites
+                    </button>
+                </div>
+            </div>
+
+            <!-- Plan Profesor Pro -->
+            <div class="transform hover:scale-105 transition duration-300">
+                <div class="w-full p-6 rounded-3xl bg-gray-50 border border-gray-200 shadow-md flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-orange-400 text-2xl mb-4"><i class="fa-solid fa-crown mr-2"></i> Profesor Pro</h3>
+                        <p class="text-4xl font-extrabold mt-3 text-gray-900">$19.900 <span class="text-base font-normal text-gray-500">/mes</span></p>
+                        <p class="text-gray-600 mt-4 font-light border-b border-gray-200 pb-4">La solución <span class="font-bold text-gray-900">completa</span> para grandes grupos y coordinación.</p>
+                        <ul class="list-none text-start mt-4 space-y-3">
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Gestión de hasta <span class="font-bold text-gray-900">100 alumnos</span></li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Creación ilimitada de ejercicios</li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Métricas avanzadas y detalladas</li>
+                            <li class="flex items-center text-gray-500"><i class="fa-solid fa-lightbulb text-yellow-400 w-5 mr-3"></i> <span class="font-bold text-gray-900">Grupos de estudio</span> y comparativos</li>
+                            <li class="flex items-center text-gray-700"><i class="fa-solid fa-check text-green-500 w-5 mr-3"></i> Soporte prioritario</li>
+                        </ul>
+                    </div>
+                    <button onclick="checkout('superprofesor')" class="w-full mt-8 px-6 py-3 bg-orange-400 text-white rounded-lg font-bold hover:bg-orange-500 transition duration-300 shadow-md">
+                        Solicitar Demo Personalizada
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<script>
+async function checkout(plan) {
+    try {
+        const response = await fetch(`/api/payments/checkout/?plan=${plan}`, {
+            method: "GET",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.url) {
+            window.location.href = data.url;  // Redirige a Stripe Checkout
+        } else {
+            console.error("Stripe no devolvió URL:", data);
+            alert("No se pudo iniciar el pago. Intenta nuevamente.");
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error de conexión con el servidor.");
+    }
+}
+</script>
+{% include "footer.html" %}
+{% endblock %}

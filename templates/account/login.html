@@ -6,95 +6,90 @@
 {% endblock head_title %}
 {% block content %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/base.css' %}">
 
-<style>
-    body {
-        background-color: #0d0d0d;
-        color: #fff;
-    }
-    .login-container {
-        max-width: 25rem;
-        margin: 2.5rem auto;
-        padding: 2rem 1.5rem;
-        background: #fff;
-        color: #1a1a1a;
-        border-radius: 0.75rem;
-        box-shadow: 0 0.125rem 1rem rgba(0,0,0,0.5);
-        width: 100%;
-        {% comment %} center {% endcomment %}
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-    *{
-
-        border: 1px solid red;
-    }
-
-    </style>
+{% if not SOCIALACCOUNT_ONLY %}
+    {% setvar link %}
+        <a href="{{ signup_url }}" class="text-orange-400 hover:text-orange-300 font-semibold transition duration-200">
+    {% endsetvar %}
+    {% setvar end_link %}
+        </a>
+    {% endsetvar %}
     
-    {% if not SOCIALACCOUNT_ONLY %}
-        {% setvar link %}
-            <a href="{{ signup_url }}">
-            {% endsetvar %}
-            {% setvar end_link %}
-            </a>
-        {% endsetvar %}
+    <div class="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-8">
         
-        <div class="login-container">
+        <div class="max-w-md w-full p-8 bg-gray-800 text-white rounded-xl shadow-2xl border border-gray-700">
+            
+            <h1 class="text-3xl font-bold mb-6 text-center text-white">
+                Iniciar Sesión
+            </h1>
+            
             {% url 'account_login' as login_url %}
-        {% element form form=form method="post" action=login_url  tags="entrance,login" %} 
-            {% slot body %}
+            
+            {% element form form=form method="post" action=login_url tags="entrance,login" %} 
+                {% slot body %}
                     {% csrf_token %}
-                    {% element fields form=form tags="prominent,login" unlabeled=True %}
-                {% endelement %}
-                {{ redirect_field }}
-            {% endslot %}
-            {% comment %} Boton de iniciar sesión {% endcomment %}
-            {% slot actions %}
-                {% element button type="submit" tags="prominent,login" %}
-                    Iniciar sesión
-                {% endelement %}
-            {% endslot %}
-        {% endelement %}
+                    
+                    <div class="space-y-4 mb-6">
+                        {% element fields form=form tags="prominent,login" unlabeled=True %}
+                        {% endelement %}
+                    </div>
+                    
+                    {{ redirect_field }}
+                    
+                    <div class="text-right">
+                        <a href="{% url 'account_reset_password' %}" class="text-sm text-gray-400 hover:text-orange-400 transition duration-200 mb-6">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+                {% endslot %}
+                
+                {% slot actions %}
+                    {% element button type="submit" tags="prominent,login" class="w-full bg-orange-500 text-black font-extrabold text-lg py-3 rounded-lg hover:bg-orange-400 transition duration-200 shadow-md" %}
+                        Iniciar sesión
+                    {% endelement %}
+                {% endslot %}
+            {% endelement %}
+            
+            <p class="mt-6 text-sm text-center text-gray-400">
+                ¿Aún no tienes cuenta? 
+                <a href="{{ signup_url }}" class="text-orange-400 hover:text-orange-300 font-semibold transition duration-200">
+                    Regístrate
+                </a>
+            </p>
         </div>
-        
-    {% endif %}
-    {% if LOGIN_BY_CODE_ENABLED or PASSKEY_LOGIN_ENABLED %}
-        {% element hr %}
-        {% endelement %}
-        {% element button_group vertical=True %}
-            {% if PASSKEY_LOGIN_ENABLED %}
-                {% element button type="submit" form="mfa_login" id="passkey_login" tags="prominent,login,outline,primary" %}
-                    {% trans "Iniciar sesión con una clave de acceso (2FA)" %}
+    </div>
+    
+    <div class="flex items-center justify-center px-4 pb-8">
+        <div class="max-w-md w-full p-8 bg-gray-800 text-white rounded-xl shadow-2xl border border-gray-700 mt-4">
+            {% if LOGIN_BY_CODE_ENABLED or PASSKEY_LOGIN_ENABLED %}
+                {% element hr class="my-6 border-gray-600" %}
+                {% endelement %}
+                
+                {% element button_group vertical=True class="space-y-3" %}
+                    {% if PASSKEY_LOGIN_ENABLED %}
+                        {% element button type="submit" form="mfa_login" id="passkey_login" tags="prominent,login,outline,primary" class="w-full border-2 border-orange-500 text-orange-400 py-3 rounded-lg hover:bg-orange-500 hover:text-black transition duration-200 font-semibold" %}
+                            {% trans "Iniciar sesión con una clave de acceso (2FA)" %}
+                        {% endelement %}
+                    {% endif %}
+                    {% if LOGIN_BY_CODE_ENABLED %}
+                        {% element button href=request_login_code_url tags="prominent,login,outline,primary" class="w-full border-2 border-orange-500 text-orange-400 py-3 rounded-lg hover:bg-orange-500 hover:text-black transition duration-200 font-semibold" %}
+                            {% trans "Enviar un código de inicio de sesión" %}
+                        {% endelement %}
+                    {% endif %}
                 {% endelement %}
             {% endif %}
-            {% if LOGIN_BY_CODE_ENABLED %}
-                {% element button href=request_login_code_url tags="prominent,login,outline,primary" %}
-                    {% trans "Enviar un código de inicio de sesión" %}
-                {% endelement %}
+            
+            {% if SOCIALACCOUNT_ENABLED %}
+                {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
             {% endif %}
-        {% endelement %}
-    {% endif %}
-    {% if SOCIALACCOUNT_ENABLED %}
-        {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
-    {% endif %}
+        </div>
+    </div>
+{% endif %}
 {% endblock content %}
+
 {% block extra_body %}
     {{ block.super }}
     {% if PASSKEY_LOGIN_ENABLED %}
         {% include "mfa/webauthn/snippets/login_script.html" with button_id="passkey_login" %}
     {% endif %}
 {% endblock %}
-
-{% comment %} Im reading the documentation, it says that I can change allauth/elements/h1.html, but idk if its 
-the best method, lemme check on yt, there is nothing on yt about it 
-
-{% load allauth %}
-<div class="myproject-h1 aa-{{ origin|slugify }}"
-     style="font-size: {% if "foo" in attrs.tags %}3{% else %}5{% endif %}rem">
-    {% slot %}{% endslot %}
-</div> {% endcomment %}

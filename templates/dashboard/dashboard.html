@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="bg-gray-100 min-h-screen">
+
+    <main class="bg-white max-w-7xl mx-auto mt-10 px-6 py-8 rounded-xl shadow-md">
+
+        <!-- SELECTOR -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-10 border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 text-black">Filtrar estudiantes</h2>
+
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <div>
+                    <label class="block mb-1 text-sm font-medium text-black">Carrera</label>
+                    <select 
+                        name="carrera_id"
+                        class="w-full p-3 border rounded-lg bg-gray-50 text-black focus:ring-2 focus:ring-indigo-500"
+                        onchange="this.form.submit()"
+                    >
+                        <option value="">Seleccione carrera</option>
+                        {% for c in carreras %}
+                        <option value="{{ c.id }}" {% if selected_carrera and selected_carrera.id == c.id %}selected{% endif %}>
+                            {{ c.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </form>
+        </div>
+
+        {% if selected_carrera %}
+
+        <!-- RESUMEN GLOBAL -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+
+            <div class="bg-black text-white p-6 rounded-xl shadow-lg">
+                <p class="text-sm opacity-80">Estudiantes totales</p>
+                <p class="text-4xl font-bold">{{ students|length }}</p>
+            </div>
+
+            <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-lg">
+                <p class="text-sm opacity-80">Intentos totales</p>
+                <p class="text-4xl font-bold">{{ total_intentos_global }}</p>
+            </div>
+
+            <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg">
+                <p class="text-sm opacity-80">Precisión promedio global</p>
+                <p class="text-4xl font-bold">
+                    {% if accuracy_global_promedio > 0 %}
+                        {{ accuracy_global_promedio }}%
+                    {% else %} - {% endif %}
+                </p>
+            </div>
+
+            <div class="bg-purple-600 text-white p-6 rounded-xl shadow-lg">
+                <p class="text-sm opacity-80">Intentos promedio / estudiante</p>
+                <p class="text-4xl font-bold">{{ intentos_promedio }}</p>
+            </div>
+
+        </div>
+
+        <!-- GRÁFICOS -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-black">Intentos por estudiante</h3>
+                <canvas id="chartIntentos"></canvas>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-black">Precisión por estudiante (%)</h3>
+                <canvas id="chartAccuracy"></canvas>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-black">Correctos vs Incorrectos</h3>
+                <canvas id="chartCorrectIncorrect"></canvas>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-black">Actividad general</h3>
+                <canvas id="chartRadar"></canvas>
+            </div>
+
+        </div>
+
+        <!-- TOP ESTUDIANTES -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+
+            <!-- TOP ACTIVOS -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-black">Top 3: Más intentos</h3>
+
+                <ul class="space-y-2">
+                    {% for t in top_intentos %}
+                    <li class="p-3 bg-gray-100 rounded-lg flex justify-between text-black">
+                        <span>{{ t.name }}</span>
+                        <strong>{{ t.intentos }} intentos</strong>
+                    </li>
+                    {% empty %}
+                    <p>No hay datos suficientes.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- TOP PRECISIÓN -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-black">Top 3: Mayor precisión</h3>
+
+                <ul class="space-y-2">
+                    {% for a in top_accuracy %}
+                    <li class="p-3 bg-gray-100 rounded-lg flex justify-between text-black">
+                        <span>{{ a.name }}</span>
+                        <strong>{{ a.accuracy }}%</strong>
+                    </li>
+                    {% empty %}
+                    <p>No hay datos suficientes.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+        <!-- TABLA PRINCIPAL -->
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mb-12">
+            <h3 class="text-lg font-semibold mb-4 text-black">Estudiantes</h3>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full border rounded-xl overflow-hidden">
+                    <thead class="bg-gray-100 text-black font-medium">
+                        <tr>
+                            <th class="p-3">Nombre</th>
+                            <th class="p-3">Semestre</th>
+                            <th class="p-3 text-center">Intentos</th>
+                            <th class="p-3 text-center">Correctos</th>
+                            <th class="p-3 text-center">Incorrectos</th>
+                            <th class="p-3 text-center">% Correctos</th>
+                            <th class="p-3 text-center">Accuracy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 text-black">{{ s.first_name }} {{ s.last_name }}</td>
+                            <td class="p-3 text-black">{{ s.semestre_actual }}</td>
+                            <td class="p-3 text-black text-center">{{ s.total_intentos }}</td>
+                            <td class="p-3 text-black text-center">{{ s.total_correctos }}</td>
+                            <td class="p-3 text-black text-center">{{ s.total_incorrectos }}</td>
+                            <td class="p-3 text-black text-center">{{ s.porcentaje_correctos }}%</td>
+                            <td class="p-3 text-black text-center">{{ s.accuracy_promedio }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        {% endif %}
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const labels = JSON.parse('{{ chart_labels|safe }}');
+    const intentos = JSON.parse('{{ chart_intentos|safe }}');
+    const accuracy = JSON.parse('{{ chart_accuracy|safe }}');
+    const correctos = JSON.parse('{{ chart_correctos|safe }}');
+    const incorrectos = JSON.parse('{{ chart_incorrectos|safe }}');
+
+    // BAR -> Intentos
+    new Chart(document.getElementById("chartIntentos"), {
+        type: "bar",
+        data: { labels, datasets: [{ label: "Intentos", data: intentos }] }
+    });
+
+    // LINE -> Accuracy
+    new Chart(document.getElementById("chartAccuracy"), {
+        type: "line",
+        data: { labels, datasets: [{ label: "Accuracy %", data: accuracy, tension: 0.4 }] }
+    });
+
+    // STACKED BAR -> Correct / Incorrect
+    new Chart(document.getElementById("chartCorrectIncorrect"), {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [
+                { label: "Correctos", data: correctos, stack: "stack" },
+                { label: "Incorrectos", data: incorrectos, stack: "stack" }
+            ]
+        }
+    });
+
+    // RADAR -> Actividad
+    new Chart(document.getElementById("chartRadar"), {
+        type: "radar",
+        data: {
+            labels: labels.slice(0, 8),
+            datasets: [
+                {
+                    label: "Actividad",
+                    data: intentos.slice(0, 8),
+                    borderWidth: 1
+                }
+            ]
+        }
+    });
+
+});
+</script>
+
+{% include "footer.html" %}
+
+{% endblock %}

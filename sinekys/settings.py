@@ -14,7 +14,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
 
+STRIPE_PRICE_BASIC = os.getenv("STRIPE_PRICE_BASIC")
+STRIPE_PRICE_PROFESOR = os.getenv("STRIPE_PRICE_PROFESOR")
+STRIPE_PRICE_SUPERPRO = os.getenv("STRIPE_PRICE_SUPERPRO")
+STRIPE_PRICE_SUPERPROFESOR = os.getenv("STRIPE_PRICE_SUPERPROFESOR")
 
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -38,6 +44,9 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # Application definition
+TAILWIND_APP_NAME = 'theme'
+ACCOUNT_ADAPTER = "accounts.account_adapter.MyAccountAdapter"
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -60,10 +69,15 @@ INSTALLED_APPS = [
     # Providers
     'allauth.socialaccount.providers.google', 
     # 'allauth.socialaccount.providers.linkedin', 
-    
+    'subscriptions', 
     # Design
     "widget_tweaks",
-    
+    "tailwind",
+    "theme",
+    "django_browser_reload",
+    'usage',
+    'mathfilters',
+
 ]
 SITE_ID = 1
 
