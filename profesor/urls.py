@@ -1,10 +1,15 @@
 from django.urls import path
 from . import views
+from accounts.views import TeacherDashboardView
+
+
+
 
 app_name = 'profesor'
 
 urlpatterns = [
     # Dashboard
+    
     path('dashboard/', views.dashboard_profesor, name='dashboard'),
     
     # Carga masiva de ejercicios

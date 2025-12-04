@@ -73,8 +73,8 @@ def build_prompt(carrera, ejercicio_enunciado):
         Contextualiza este ejercicio para estudiantes de {carrera}:
         Ejercicio: {ejercicio_enunciado}
         """
-    logger.debug("Prompt system: %s", system.strip())
-    logger.debug("Prompt user: %s", user.strip())
+    # logger.debug("Prompt system: %s", system.strip())
+    # logger.debug("Prompt user: %s", user.strip())
     
     return system.strip(), user.strip()
 
@@ -87,7 +87,7 @@ def safe_create_response(payload, carrera, max_retries=2):
     while attempt < max_retries:
         try:
             attempt += 1
-            logger.debug("LLM Request attempt %d for carrera=%s, ejercicio_id=%s", attempt, carrera_sanitizada, getattr(payload, "ejercicio_id", "?"))
+            # logger.debug("LLM Request attempt %d for carrera=%s, ejercicio_id=%s", attempt, carrera_sanitizada, getattr(payload, "ejercicio_id", "?"))
             
             resp = client.chat.completions.create(
                 model=MODEL,
@@ -102,10 +102,10 @@ def safe_create_response(payload, carrera, max_retries=2):
             )
             # obtener contenido
             text = resp.choices[0].message.content.strip()
-            logger.debug("LLM Response received for carrera=%s, ejercicio_id=%s: %s", carrera_sanitizada, getattr(payload, "ejercicio_id", "?"), text[:1000])
+            # logger.debug("LLM Response received for carrera=%s, ejercicio_id=%s: %s", carrera_sanitizada, getattr(payload, "ejercicio_id", "?"), text[:1000])
             try: 
                 parsed = json.loads(text)
-                logger.debug("safe_create_response: JSON parsed successfully on attempt %d for carrera=%s, ejercicio_id=%s", attempt, carrera_sanitizada, getattr(payload, "ejercicio_id", "?"))
+                # logger.debug("safe_create_response: JSON parsed successfully on attempt %d for carrera=%s, ejercicio_id=%s", attempt, carrera_sanitizada, getattr(payload, "ejercicio_id", "?"))
                 if "display_text" in parsed:
                     parsed["display_text"] = normalize_text(parsed["display_text"], for_storage=True)
                     return parsed
@@ -118,12 +118,12 @@ def safe_create_response(payload, carrera, max_retries=2):
                         sanitized = _sanitize_json_string(json_candidate)
                         parsed = json.loads(sanitized)
                         if "display_text" in parsed:
-                            logger.debug("safe_create_response: JSON parsed successfully after sanitization on attempt %d for carrera=%s, ejercicio_id=%s", attempt, carrera_sanitizada, getattr(payload, "ejercicio_id", "?"))
+                            # logger.debug("safe_create_response: JSON parsed successfully after sanitization on attempt %d for carrera=%s, ejercicio_id=%s", attempt, carrera_sanitizada, getattr(payload, "ejercicio_id", "?"))
                             return parsed
                         logger.warning("safe_create_response: 'display_text' missing in sanitized JSON on attempt %)d for carrera=%s, ejercicio_id=%s", attempt, carrera_sanitizada, getattr(payload, "ejercicio_id", "?"))
                     except json.JSONDecodeError as e2:
                         logger.warning("safe_create_response: fallo parseo JSON sanitizado en attempt %d for carrera=%s, ejercicio_id=%s, error=%s", attempt, carrera_sanitizada, getattr(payload, "ejercicio_id", "?"), str(e2))
-                        logger.debug("JSON candidate: %s", json_candidate)
+                        # logger.debug("JSON candidate: %s", json_candidate)
             if attempt < max_retries:
                 time.sleep(attempt * 0.7)
         except Exception as exc:

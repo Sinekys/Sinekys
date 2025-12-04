@@ -48,7 +48,6 @@ def call_my_ai_service(payload: dict, max_retries: int = 2, temperature: float =
     "Actúas como el motor pedagógico oficial de Sinekys. "
     "Tu prioridad es producir retroalimentación matemática concisa, clara, estructurada y sin relleno. "
     "Tu tono es técnico, directo y orientado a corregir. NO des sermones, NO interpretes intenciones. "
-    "Estás hablando directamente con el estudiante"
     "NO escribas más de lo necesario para comprender la corrección. "
     "Formato SIEMPRE obligatorio: responde ÚNICAMENTE un JSON válido con estas claves:\n"
     "{\n"
@@ -68,6 +67,8 @@ def call_my_ai_service(payload: dict, max_retries: int = 2, temperature: float =
     "- El ultimo de pasos_correctos debe ser la respuesta correcta (final)"
     "- Si el estudiante ingresa una respuesta absurda, solo indícalo técnicamente ('no coincide con la solución').\n"
     "- Si no se pueden generar pasos, devuelve listas vacías.\n"
+    "- Estás hablando directamente con el estudiante, háblale a él/ella, sé neutro 'Te equivocaste en esto', 'Tu respuesta debió ser', 'aqui lo hiciste bien, porque...', etc.\n"
+    
     )
 
     user = (
@@ -81,7 +82,7 @@ def call_my_ai_service(payload: dict, max_retries: int = 2, temperature: float =
     while attempt < max_retries:
         attempt += 1
         try:
-            logger.debug("LLM feedback call attempt %d for enunciado[:80]=%s", attempt, enunciado[:80])
+            # logger.debug("LLM feedback call attempt %d for enunciado[:80]=%s", attempt, enunciado[:80])
             resp = client.chat.completions.create(
                 model=MODEL,
                 messages=[
@@ -93,7 +94,7 @@ def call_my_ai_service(payload: dict, max_retries: int = 2, temperature: float =
                 response_format={"type": "text"}  # texto libre para parsear
             )
             text = resp.choices[0].message.content.strip()
-            logger.debug("LLM feedback raw response: %s", text[:800])
+            # logger.debug("LLM feedback raw response: %s", text[:800])
             
           # intentar parsear JSON
             try:

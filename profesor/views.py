@@ -23,10 +23,6 @@ def dashboard_profesor(request):
     carrera_id = request.GET.get("carrera_id")
     materia_id = request.GET.get("materia_id")
     
-    # DEBUG: Imprimir valores recibidos
-    print(f"DEBUG - carrera_id: {carrera_id}")
-    print(f"DEBUG - materia_id: {materia_id}")
-    print(f"DEBUG - GET params: {request.GET}")
     
     carreras = Carrera.objects.all()
     materias = Materia.objects.all()
@@ -64,7 +60,7 @@ def dashboard_profesor(request):
 
     # Si no hay filtros, no mostrar datos
     if not carrera_id and not materia_id:
-        print("DEBUG - No hay filtros, retornando vista vacía")
+        # print("DEBUG - No hay filtros, retornando vista vacía")
         return render(request, "dashboard/dashboard.html", context)
 
     # Construir query de estudiantes
@@ -74,12 +70,12 @@ def dashboard_profesor(request):
         carrera = get_object_or_404(Carrera, pk=carrera_id)
         context["selected_carrera"] = carrera
         estudiantes_query = estudiantes_query.filter(carrera=carrera)
-        print(f"DEBUG - Carrera seleccionada: {carrera.nombre}")
+        # print(f"DEBUG - Carrera seleccionada: {carrera.nombre}")
     
     if materia_id:
         materia = get_object_or_404(Materia, pk=materia_id)
         context["selected_materia"] = materia
-        print(f"DEBUG - Materia seleccionada: {materia.nombre}")
+        # print(f"DEBUG - Materia seleccionada: {materia.nombre}")
 
     # Query base de intentos con filtros
     intentos_filter = Q()
@@ -102,7 +98,7 @@ def dashboard_profesor(request):
         dificultad_promedio=Avg("intento__ejercicio__dificultad", filter=intentos_filter),
     ).filter(total_intentos__gt=0).order_by('-total_intentos')
 
-    print(f"DEBUG - Total estudiantes con intentos: {estudiantes.count()}")
+    # print(f"DEBUG - Total estudiantes con intentos: {estudiantes.count()}")
 
     # Procesar datos de estudiantes
     students_data = []
@@ -164,8 +160,8 @@ def dashboard_profesor(request):
         context["promedio_general_accuracy"] = round(total_accuracy_sum / len(students_data), 2)
         context["promedio_tiempo_general"] = round(total_tiempo_sum / len(students_data), 2)
 
-    print(f"DEBUG - Total estudiantes procesados: {len(students_data)}")
-    print(f"DEBUG - Total intentos: {total_intentos_count}")
+    # print(f"DEBUG - Total estudiantes procesados: {len(students_data)}")
+    # print(f"DEBUG - Total intentos: {total_intentos_count}")
 
     # Serializar datos de gráficos de estudiantes
     context["chart_labels"] = json.dumps(chart_labels)
@@ -194,7 +190,7 @@ def dashboard_profesor(request):
         chart_tipos_labels = [t.get_tipo_ejercicio_display() for t in tipos]
         chart_tipos_count = [t.total for t in tipos]
         
-        print(f"DEBUG - Tipos encontrados: {len(tipos)}")
+        # print(f"DEBUG - Tipos encontrados: {len(tipos)}")
         
         context["chart_tipos_labels"] = json.dumps(chart_tipos_labels)
         context["chart_tipos_count"] = json.dumps(chart_tipos_count)
@@ -227,7 +223,7 @@ def dashboard_profesor(request):
             chart_intentos_por_dia_labels.append(d["dia"].strftime("%Y-%m-%d"))
             chart_intentos_por_dia_data.append(d["total"])
         
-        print(f"DEBUG - Días con actividad: {len(chart_intentos_por_dia_labels)}")
+        # print(f"DEBUG - Días con actividad: {len(chart_intentos_por_dia_labels)}")
         
         context["chart_intentos_por_dia_labels"] = json.dumps(chart_intentos_por_dia_labels)
         context["chart_intentos_por_dia_data"] = json.dumps(chart_intentos_por_dia_data)
@@ -269,12 +265,12 @@ def dashboard_profesor(request):
                 chart_distribucion_dificultad_labels.append(rango["label"])
                 chart_distribucion_dificultad_data.append(count)
         
-        print(f"DEBUG - Rangos de dificultad con datos: {len(chart_distribucion_dificultad_labels)}")
+        # print(f"DEBUG - Rangos de dificultad con datos: {len(chart_distribucion_dificultad_labels)}")
         
         context["chart_distribucion_dificultad_labels"] = json.dumps(chart_distribucion_dificultad_labels)
         context["chart_distribucion_dificultad_data"] = json.dumps(chart_distribucion_dificultad_data)
 
-    print("DEBUG - Renderizando template")
+    # print("DEBUG - Renderizando template")
     return render(request, "dashboard/dashboard.html", context)
 
 

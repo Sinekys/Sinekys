@@ -3,5 +3,27 @@
 
 {% block content %}
 <h1> Vista docentes!!</h1>
+<h2>Bienvenido, {{ docente.user.get_full_name }}</h2>
+{% if not is_verified %}
+  <div class="warning">Tu cuenta está pendiente de verificación.</div>
+{% endif %}
 
+<h3>Mis materias</h3>
+<ul>{% for m in materias %}<li>{{ m.nombre }}</li>{% empty %}<li>No tienes materias asignadas</li>{% endfor %}</ul>
+
+<h3>Actividad reciente</h3>
+<table>
+  <thead><tr><th>Alumno</th><th>Ejercicio</th><th>Fecha</th></tr></thead>
+  <tbody>
+  {% for a in recent_attempts %}
+    <tr>
+      <td>{{ a.estudiante.user.get_full_name }}</td>
+      <td>{{ a.ejercicio.titulo }}</td>
+      <td>{{ a.fecha_intento }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="3">Sin actividad reciente</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

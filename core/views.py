@@ -18,7 +18,10 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 @login_required
 def home_view(request):
-    user_type, profile = get_user_type(request.user)    
+    user_type, profile = get_user_type(request.user)
+    
+    if user_type == 'docente':
+        return redirect('profesor:dashboard')    
     if user_type == 'estudiante':
         from accounts.models import Diagnostico
         from ejercicios.models import Intento, Feedback
@@ -78,7 +81,9 @@ def home_view(request):
             'ultimos': ultimos,
         }
     return render(request, 'main_page.html', context)
-    
+
+    # fallback
+    return render(request, 'main_page.html', {})
     
 def index_view(request):
     """Vista para usuarios no autenticados"""

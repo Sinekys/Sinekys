@@ -91,8 +91,28 @@
       {% trans "Registrarse" %}
     </button>
   </form>
+        <div class="text-center mt-4">
+    <div class="mt-4 flex flex-col gap-3 text-center">
 
-  <a href="{{ login_url }}" class="login-link">{% trans "¿Ya tienes cuenta? Inicia sesión" %}</a>
+    <!-- Botón para iniciar sesión -->
+    <a href="{{ login_url }}"
+       class="inline-block px-4 py-2 rounded-lg text-white"
+       style="background-color:#3498db; text-decoration:none;">
+       ¿Ya tienes cuenta? Inicia sesión
+    </a>
+    
+    
+        <!-- Botón para docentes -->
+    <a href="{% url 'teacher_signup' %}"
+       class="inline-block px-4 py-2 rounded-lg text-white"
+       style="background-color: #9b59b6; text-decoration:none;">
+        ¿Eres docente? Regístrate aquí
+    </a>
+
+    
+
+    </div>
+
 </div>
 
 {% if SOCIALACCOUNT_ENABLED %}

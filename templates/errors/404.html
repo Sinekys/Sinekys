@@ -1,2 +1,21 @@
-{% {% extends "base.html" %}%}
-<h1>  Not Found </h1>
+{% extends "base.html" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<main class="min-h-screen bg-[#0a0a0a] py-16 px-4 flex justify-center">
+
+    <div class="w-full max-w-3xl bg-gray-900 border border-gray-800 rounded-2xl p-10 shadow-xl text-center">
+
+        <h1 class="text-3xl font-extrabold text-white mb-6">
+            Oops!
+        </h1>
+
+        <p class="text-gray-400 text-lg">
+            Página no encontrada (404).
+        </p>
+
+    </div>
+
+</main>
+{% endblock %}
