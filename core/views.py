@@ -81,7 +81,7 @@ def home_view(request):
             'is_docente': True,
             # ... datos específicos para docentes ...
         }
-        return render(request, 'docentes/main_page.html', context)
+        return render(request, 'docente/main_page.html', context)
     
     else:
         # Usuario genérico (debería ser raro aquí por el @login_required)
