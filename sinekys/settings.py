@@ -128,6 +128,12 @@ AUTHENTICATION_BACKENDS = [
     # username + password
     # email + password
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://www.sinekys.com",
+    "https://sinekys.com",
+]
+
 # AllAuth settings | Pendiente | Pending
 
 
