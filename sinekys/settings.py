@@ -28,6 +28,8 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'sinekys-production.up.railway.app', "www.sinekys.com","sinekys.com",]
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1',
+    "https://www.sinekys.com",
+    "https://sinekys.com",
     'https://sinekys-production.up.railway.app',
 ]
 
