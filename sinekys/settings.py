@@ -25,8 +25,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'sinekys-production.up.railway.app']
-
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'sinekys-production.up.railway.app', "www.sinekys.com","sinekys.com",]
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1',
     'https://sinekys-production.up.railway.app',
